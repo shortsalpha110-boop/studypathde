@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyPathDE — Your Gateway to German Universities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">StudyPathDE</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#checker">Check Eligibility</a></li>
+    </ul>
+    <a href="#checker" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      AI-Powered University Matching
+    </div>
+    <h1 class="hero-title">
+      Your Path to<br />
+      <span class="gradient-text">German Universities</span><br />
+      Starts Here
+    </h1>
+    <p class="hero-subtitle">
+      Upload your documents. Get matched to the right universities in Germany.
+      We handle the complexity — you focus on your future.
+    </p>
+    <div class="hero-actions">
+      <a href="#checker" class="btn-primary">
+        <span>Check My Eligibility</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#how-it-works" class="btn-ghost">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num">500+</span>
+        <span class="stat-label">Students Helped</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num">97%</span>
+        <span class="stat-label">Match Accuracy</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num">200+</span>
+        <span class="stat-label">Partner Universities</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Process</div>
+      <h2 class="section-title">Three Steps to Your<br /><span class="gradient-text">German University</span></h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <div class="step-icon">📄</div>
+        <h3>Upload Documents</h3>
+        <p>Securely upload your transcripts, certificates, and language test results. We process everything instantly.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <div class="step-icon">🎯</div>
+        <h3>AI Matching</h3>
+        <p>Our intelligent system analyzes your profile against 200+ German universities to find your best matches.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <div class="step-icon">🚀</div>
+        <h3>Get Your Path</h3>
+        <p>Receive a personalized guide with matched universities, requirements, deadlines, and step-by-step guidance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ELIGIBILITY CHECKER -->
+<section class="section checker-section" id="checker">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Free Tool</div>
+      <h2 class="section-title">Check Your <span class="gradient-text">Eligibility</span></h2>
+      <p class="section-subtitle">Upload your documents and fill in your details to get matched universities instantly.</p>
+    </div>
+
+    <div class="checker-wrapper">
+      <!-- STEP 1: Upload + Details -->
+      <div class="checker-step active" id="step-details">
+        <div class="checker-grid">
+          <!-- Upload Zone -->
+          <div class="upload-zone-wrapper">
+            <h3 class="form-section-title">Upload Your Documents</h3>
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-idle" id="uploadIdle">
+                <div class="upload-icon-wrap">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <p class="upload-main-text">Drag &amp; drop your documents here</p>
+                <p class="upload-sub-text">or click to browse files</p>
+                <span class="upload-formats">PDF, DOC, DOCX, JPG, PNG — max 10MB</span>
+              </div>
+              <div class="upload-success" id="uploadSuccess" style="display:none">
+                <div class="success-checkmark">
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="22" stroke="#22c55e" stroke-width="2" fill="rgba(34,197,94,0.1)"/>
+                    <path d="M14 24l8 8 14-16" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <p class="success-title">Document Uploaded Successfully!</p>
+                <p class="success-filename" id="successFilename">—</p>
+                <p class="success-confirm">Your file has been received and is ready for processing.</p>
+                <button class="btn-change-file" id="btnChangeFile">Upload Different File</button>
+              </div>
+              <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none" />
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="form-fields-wrapper">
+            <h3 class="form-section-title">Your Details</h3>
+            <div class="form-group">
+              <label>Country of Origin</label>
+              <select id="country">
+                <option value="">Select your country</option>
+                <option>Afghanistan</option><option>Albania</option><option>Algeria</option>
+                <option>Argentina</option><option>Armenia</option><option>Azerbaijan</option>
+                <option>Bangladesh</option><option>Belarus</option><option>Bolivia</option>
+                <option>Bosnia and Herzegovina</option><option>Brazil</option><option>Bulgaria</option>
+                <option>Cambodia</option><option>Cameroon</option><option>China</option>
+                <option>Colombia</option><option>Croatia</option><option>Cuba</option>
+                <option>Czech Republic</option><option>DR Congo</option><option>Ecuador</option>
+                <option>Egypt</option><option>Ethiopia</option><option>Georgia</option>
+                <option>Ghana</option><option>Guatemala</option><option>Hungary</option>
+                <option>India</option><option>Indonesia</option><option>Iran</option>
+                <option>Iraq</option><option>Jordan</option><option>Kazakhstan</option>
+                <option>Kenya</option><option>Kosovo</option><option>Kyrgyzstan</option>
+                <option>Lebanon</option><option>Libya</option><option>Macedonia</option>
+                <option>Malaysia</option><option>Mexico</option><option>Moldova</option>
+                <option>Mongolia</option><option>Montenegro</option><option>Morocco</option>
+                <option>Mozambique</option><option>Myanmar</option><option>Nepal</option>
+                <option>Nigeria</option><option>North Macedonia</option><option>Pakistan</option>
+                <option>Palestine</option><option>Paraguay</option><option>Peru</option>
+                <option>Philippines</option><option>Poland</option><option>Romania</option>
+                <option>Russia</option><option>Rwanda</option><option>Saudi Arabia</option>
+                <option>Senegal</option><option>Serbia</option><option>Slovakia</option>
+                <option>Sri Lanka</option><option>Sudan</option><option>Syria</option>
+                <option>Tajikistan</option><option>Tanzania</option><option>Thailand</option>
+                <option>Tunisia</option><option>Turkey</option><option>Turkmenistan</option>
+                <option>Uganda</option><option>Ukraine</option><option>Uzbekistan</option>
+                <option>Venezuela</option><option>Vietnam</option><option>Yemen</option>
+                <option>Zimbabwe</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Your Grade / GPA</label>
+              <select id="grade">
+                <option value="">Select your grade</option>
+                <option value="excellent">Excellent (Top 10% / GPA 3.7+)</option>
+                <option value="very_good">Very Good (GPA 3.3 – 3.6)</option>
+                <option value="good">Good (GPA 2.7 – 3.2)</option>
+                <option value="average">Average (GPA 2.0 – 2.6)</option>
+                <option value="below_average">Below Average (&lt; 2.0)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Field of Study</label>
+              <select id="field">
+                <option value="">Select your field</option>
+                <option>Computer Science / IT</option>
+                <option>Engineering (Mechanical / Electrical / Civil)</option>
+                <option>Business Administration / Economics</option>
+                <option>Medicine / Health Sciences</option>
+                <option>Natural Sciences (Physics / Chemistry / Biology)</option>
+                <option>Mathematics / Statistics</option>
+                <option>Architecture / Urban Planning</option>
+                <option>Law</option>
+                <option>Social Sciences / Psychology</option>
+                <option>Humanities / Arts</option>
+                <option>Agriculture / Environmental Science</option>
+                <option>Media / Communication</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>German Level</label>
+                <select id="german">
+                  <option value="">Select level</option>
+                  <option value="none">None</option>
+                  <option value="a1">A1</option><option value="a2">A2</option>
+                  <option value="b1">B1</option><option value="b2">B2</option>
+                  <option value="c1">C1</option><option value="c2">C2</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>English Level</label>
+                <select id="english">
+                  <option value="">Select level</option>
+                  <option value="none">None</option>
+                  <option value="a1">A1</option><option value="a2">A2</option>
+                  <option value="b1">B1</option><option value="b2">B2</option>
+                  <option value="c1">C1</option><option value="c2">C2</option>
+                  <option value="native">Native</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary btn-full" id="btnCheck">
+              <span>Check My Eligibility</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Lead Capture -->
+      <div class="checker-step" id="step-lead" style="display:none">
+        <div class="lead-capture-card">
+          <div class="lead-icon">🎯</div>
+          <h3>Your Results Are Ready!</h3>
+          <p>We found <strong id="matchCount">7</strong> universities that match your profile. Enter your details to see them.</p>
+          <div class="form-group">
+            <label>Your Full Name</label>
+            <input type="text" id="leadName" placeholder="e.g. Ahmed Hassan" />
+          </div>
+          <div class="form-group">
+            <label>Your Email Address</label>
+            <input type="email" id="leadEmail" placeholder="e.g. ahmed@email.com" />
+          </div>
+          <button class="btn-primary btn-full" id="btnReveal">
+            <span>Show My University Matches</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+          <p class="lead-privacy">🔒 We respect your privacy. No spam, ever.</p>
+        </div>
+      </div>
+
+      <!-- STEP 3: Results -->
+      <div class="checker-step" id="step-results" style="display:none">
+        <div class="results-header">
+          <div class="results-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Analysis Complete
+          </div>
+          <h3 class="results-title">Universities Matched for <span id="resultName" class="gradient-text">You</span></h3>
+          <p class="results-subtitle">Based on your profile, here are your best matches in Germany:</p>
+        </div>
+        <div class="unis-grid" id="unisGrid"></div>
+        <div class="results-actions">
+          <button class="btn-primary" id="btnDownloadPDF">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download Personalized PDF Guide</span>
+          </button>
+          <a href="#pricing" class="btn-ghost">Get Full Admission Service</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Pricing</div>
+      <h2 class="section-title">Choose Your <span class="gradient-text">Path</span></h2>
+      <p class="section-subtitle">Start free, upgrade when you're ready for expert support.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <!-- FREE PLAN -->
+      <div class="pricing-card">
+        <div class="plan-tag-wrap">
+          <span class="plan-tag early-bird">🔥 FREE — Early Bird Offer</span>
+        </div>
+        <div class="plan-name">Guide Pack</div>
+        <div class="plan-price-wrap">
+          <span class="plan-price-old">€19</span>
+          <span class="plan-price">€0</span>
+        </div>
+        <p class="plan-urgency">⏳ Limited time — first 100 students only</p>
+        <ul class="plan-features">
+          <li><span class="feat-check">✓</span> Full eligibility assessment</li>
+          <li><span class="feat-check">✓</span> Matched university list (top 10)</li>
+          <li><span class="feat-check">✓</span> Personalized PDF guide download</li>
+          <li><span class="feat-check">✓</span> Entry requirements per university</li>
+          <li><span class="feat-check">✓</span> Application deadline calendar</li>
+          <li><span class="feat-check">✓</span> Language requirement breakdown</li>
+        </ul>
+        <a href="#checker" class="btn-plan">Get Free Guide</a>
+      </div>
+
+      <!-- PREMIUM PLAN -->
+      <div class="pricing-card pricing-featured">
+        <div class="plan-badge">Most Popular</div>
+        <div class="coming-soon-overlay">
+          <div class="coming-soon-inner">
+            <div class="cs-icon">🚧</div>
+            <div class="cs-title">Visa Guidance</div>
+            <div class="cs-sub">Coming Soon</div>
+          </div>
+        </div>
+        <div class="plan-name">Admission Service</div>
+        <div class="plan-price-wrap">
+          <span class="plan-price">€299</span>
+          <span class="plan-period">one-time</span>
+        </div>
+        <p class="plan-desc">We manage your entire university application process.</p>
+        <ul class="plan-features">
+          <li><span class="feat-check gold">✓</span> Everything in Guide Pack</li>
+          <li><span class="feat-check gold">✓</span> Dedicated admission consultant</li>
+          <li><span class="feat-check gold">✓</span> Document preparation &amp; review</li>
+          <li><span class="feat-check gold">✓</span> University application submission</li>
+          <li><span class="feat-check gold">✓</span> Motivation letter writing support</li>
+          <li><span class="feat-check gold">✓</span> Interview preparation coaching</li>
+          <li><span class="feat-check gold">✓</span> Admission status tracking</li>
+          <li><span class="feat-check muted">◷</span> <span class="feat-muted">Visa Guidance — Coming Soon</span></li>
+        </ul>
+        <button class="btn-plan btn-plan-premium" disabled>Coming Soon — Notify Me</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">StudyPathDE</span>
+      </div>
+      <p class="footer-tagline">Helping international students reach German universities.</p>
+      <p class="footer-copy">© 2026 StudyPathDE. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
