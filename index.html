@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyPathDE — Your Gateway to German Universities</title>
+  <title>StudyPathDE - Find Your German University | AI-Powered Matching</title>
+  <meta name="description" content="Upload your documents and get matched to the best German universities. AI reads your grades, applies Anabin eligibility rules, and creates a personalised application guide." />
+  <meta name="keywords" content="study in germany, german university, international students, anabin, DAAD, university admission germany, study abroad germany, german university application" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://studypathde.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://studypathde.vercel.app/" />
+  <meta property="og:title" content="StudyPathDE - Find Your German University | AI-Powered Matching" />
+  <meta property="og:description" content="Upload your documents and get matched to the best German universities. AI reads your grades, applies Anabin eligibility rules, and creates a personalised application guide." />
+  <meta property="og:image" content="https://studypathde.vercel.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="StudyPathDE - Find Your German University | AI-Powered Matching" />
+  <meta name="twitter:description" content="Upload your documents and get matched to the best German universities. AI reads your grades, applies Anabin eligibility rules, and creates a personalised application guide." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -228,14 +240,18 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>English Level</label>
+                <label>English Level / Certificate</label>
                 <select id="english">
-                  <option value="">Select level</option>
-                  <option value="none">None</option>
-                  <option value="a1">A1</option><option value="a2">A2</option>
-                  <option value="b1">B1</option><option value="b2">B2</option>
-                  <option value="c1">C1</option><option value="c2">C2</option>
-                  <option value="native">Native</option>
+                  <option value="">Select your level</option>
+                  <option value="ielts_5">IELTS 5.0–5.5 (Basic)</option>
+                  <option value="ielts_6">IELTS 6.0 (Good)</option>
+                  <option value="ielts_6_5">IELTS 6.5 (Very Good)</option>
+                  <option value="ielts_7">IELTS 7.0+ (Excellent)</option>
+                  <option value="toefl_79">TOEFL 79 or below</option>
+                  <option value="toefl_80">TOEFL 80–95 (Good)</option>
+                  <option value="toefl_96">TOEFL 96+ (Excellent)</option>
+                  <option value="native">Native English Speaker</option>
+                  <option value="none">No English Certificate Yet</option>
                 </select>
               </div>
             </div>
@@ -244,28 +260,6 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
           </div>
-        </div>
-      </div>
-
-      <!-- STEP 2: Lead Capture -->
-      <div class="checker-step" id="step-lead" style="display:none">
-        <div class="lead-capture-card">
-          <div class="lead-icon">🎯</div>
-          <h3>Your Results Are Ready!</h3>
-          <p>We found <strong id="matchCount">7</strong> universities that match your profile. Enter your details to see them.</p>
-          <div class="form-group">
-            <label>Your Full Name</label>
-            <input type="text" id="leadName" placeholder="e.g. Ahmed Hassan" />
-          </div>
-          <div class="form-group">
-            <label>Your Email Address</label>
-            <input type="email" id="leadEmail" placeholder="e.g. ahmed@email.com" />
-          </div>
-          <button class="btn-primary btn-full" id="btnReveal">
-            <span>Show My University Matches</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-          <p class="lead-privacy">🔒 We respect your privacy. No spam, ever.</p>
         </div>
       </div>
 
@@ -370,6 +364,39 @@
     </div>
   </div>
 </footer>
+
+<!-- LEAD CAPTURE MODAL -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-icon-wrap">🎯</div>
+    <h3 class="modal-title">Your Results Are Ready!</h3>
+    <p class="modal-sub">We found <strong id="modalMatchCount">0</strong> universities that match your profile.<br>Enter your details to unlock your personalised guide.</p>
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input type="text" id="modalName" placeholder="e.g. Ahmed Hassan" autocomplete="name" />
+    </div>
+    <div class="form-group">
+      <label>Email Address *</label>
+      <input type="email" id="modalEmail" placeholder="e.g. ahmed@email.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label>WhatsApp Number <span class="label-opt">optional</span></label>
+      <input type="tel" id="modalWhatsapp" placeholder="e.g. +91 98765 43210" autocomplete="tel" />
+    </div>
+    <div class="form-group">
+      <label>Country of Origin</label>
+      <input type="text" id="modalCountry" readonly class="input-readonly" />
+    </div>
+    <button class="btn-primary btn-full" id="btnModalReveal">
+      <span>Unlock My University Matches</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <p class="lead-privacy">🔒 We respect your privacy. No spam, ever.</p>
+  </div>
+</div>
 
 <!-- jsPDF CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
