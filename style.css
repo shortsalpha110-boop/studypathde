@@ -722,3 +722,232 @@ body {
   .modal-card { padding: 32px 20px 28px; border-radius: 18px; }
   .modal-title { font-size: 1.3rem; }
 }
+
+/* ================================================================
+   DEGREE SELECTOR TABS
+   ================================================================ */
+.degree-selector-wrap {
+  margin-bottom: 32px;
+}
+
+.degree-question {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+
+.degree-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.degree-tab {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  text-align: left;
+}
+
+.degree-tab:hover {
+  border-color: var(--gold-dark);
+  background: var(--bg-card-2);
+}
+
+.degree-tab.active {
+  border-color: var(--gold);
+  background: rgba(212, 168, 67, 0.08);
+  box-shadow: 0 0 20px rgba(212, 168, 67, 0.15);
+}
+
+.tab-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.degree-tab.active .tab-label { opacity: 1; }
+
+.tab-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.tab-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ================================================================
+   DOCUMENT UPLOAD CARDS
+   ================================================================ */
+.doc-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.doc-card.doc-card-done {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.doc-card-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.doc-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.doc-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.doc-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-required {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.badge-recommended {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--gold-light);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.badge-optional {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.doc-action { flex-shrink: 0; }
+
+.btn-upload-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(212, 168, 67, 0.1);
+  border: 1.5px solid var(--gold-dark);
+  border-radius: 8px;
+  color: var(--gold-light);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-upload-doc:hover {
+  background: rgba(212, 168, 67, 0.2);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+.doc-success-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-filename {
+  font-size: 0.8rem;
+  color: var(--green);
+  font-weight: 500;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.doc-remove-btn:hover { color: #f87171; }
+
+/* ================================================================
+   DEGREE / DOC RESPONSIVE
+   ================================================================ */
+@media (max-width: 640px) {
+  .degree-tabs { flex-direction: column; }
+  .degree-tab { min-width: unset; flex-direction: row; align-items: center; gap: 10px; }
+  .tab-label { display: none; }
+  .doc-card { flex-wrap: wrap; }
+  .doc-card-body { flex: 1 1 100%; }
+  .doc-right { width: 100%; justify-content: space-between; }
+  .doc-filename { max-width: 120px; }
+}

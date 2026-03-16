@@ -129,36 +129,35 @@
     <div class="checker-wrapper">
       <!-- STEP 1: Upload + Details -->
       <div class="checker-step active" id="step-details">
+
+        <!-- DEGREE LEVEL SELECTOR -->
+        <div class="degree-selector-wrap">
+          <p class="degree-question">What are you applying for?</p>
+          <div class="degree-tabs" id="degreeTabs">
+            <button class="degree-tab active" data-level="bachelor">
+              <span class="tab-label">01</span>
+              <span class="tab-title">Bachelor's Degree</span>
+              <span class="tab-sub">Undergraduate</span>
+            </button>
+            <button class="degree-tab" data-level="master">
+              <span class="tab-label">02</span>
+              <span class="tab-title">Master's Degree</span>
+              <span class="tab-sub">Postgraduate</span>
+            </button>
+            <button class="degree-tab" data-level="phd">
+              <span class="tab-label">03</span>
+              <span class="tab-title">PhD / Doctorate</span>
+              <span class="tab-sub">Research degree</span>
+            </button>
+          </div>
+        </div>
+
         <div class="checker-grid">
-          <!-- Upload Zone -->
+          <!-- Document Upload Cards -->
           <div class="upload-zone-wrapper">
             <h3 class="form-section-title">Upload Your Documents</h3>
-            <div class="upload-zone" id="uploadZone">
-              <div class="upload-idle" id="uploadIdle">
-                <div class="upload-icon-wrap">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
-                </div>
-                <p class="upload-main-text">Drag &amp; drop your documents here</p>
-                <p class="upload-sub-text">or click to browse files</p>
-                <span class="upload-formats">PDF, DOC, DOCX, JPG, PNG — max 10MB</span>
-              </div>
-              <div class="upload-success" id="uploadSuccess" style="display:none">
-                <div class="success-checkmark">
-                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                    <circle cx="24" cy="24" r="22" stroke="#22c55e" stroke-width="2" fill="rgba(34,197,94,0.1)"/>
-                    <path d="M14 24l8 8 14-16" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <p class="success-title">Document Uploaded Successfully!</p>
-                <p class="success-filename" id="successFilename">—</p>
-                <p class="success-confirm">Your file has been received and is ready for processing.</p>
-                <button class="btn-change-file" id="btnChangeFile">Upload Different File</button>
-              </div>
-              <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none" />
+            <div class="doc-cards-grid" id="docCardsGrid">
+              <!-- Populated by JavaScript based on degree level -->
             </div>
           </div>
 
@@ -213,19 +212,70 @@
               <label>Field of Study</label>
               <select id="field">
                 <option value="">Select your field</option>
-                <option>Computer Science / IT</option>
-                <option>Engineering (Mechanical / Electrical / Civil)</option>
-                <option>Business Administration / Economics</option>
-                <option>Medicine / Health Sciences</option>
-                <option>Natural Sciences (Physics / Chemistry / Biology)</option>
-                <option>Mathematics / Statistics</option>
-                <option>Architecture / Urban Planning</option>
-                <option>Law</option>
-                <option>Social Sciences / Psychology</option>
-                <option>Humanities / Arts</option>
-                <option>Agriculture / Environmental Science</option>
-                <option>Media / Communication</option>
-                <option>Other</option>
+                <optgroup label="Technology &amp; Engineering">
+                  <option>Computer Science / IT</option>
+                  <option>Engineering (Mechanical / Electrical / Civil)</option>
+                  <option>Biotechnology</option>
+                  <option>Biochemistry</option>
+                  <option>Industrial Design</option>
+                </optgroup>
+                <optgroup label="Business &amp; Management">
+                  <option>Business Administration / Economics</option>
+                  <option>Accounting</option>
+                  <option>Finance &amp; Banking</option>
+                  <option>Marketing</option>
+                  <option>International Business</option>
+                  <option>Human Resource Management</option>
+                  <option>Supply Chain Management</option>
+                  <option>Tourism &amp; Hospitality Management</option>
+                  <option>Economics</option>
+                </optgroup>
+                <optgroup label="Health &amp; Life Sciences">
+                  <option>Medicine / Health Sciences</option>
+                  <option>Pharmacy</option>
+                  <option>Nursing</option>
+                  <option>Dentistry</option>
+                  <option>Veterinary Medicine</option>
+                  <option>Natural Sciences (Physics / Chemistry / Biology)</option>
+                  <option>Chemistry</option>
+                  <option>Physics</option>
+                </optgroup>
+                <optgroup label="Mathematics &amp; Data">
+                  <option>Mathematics / Statistics</option>
+                  <option>Mathematics</option>
+                  <option>Statistics</option>
+                </optgroup>
+                <optgroup label="Social Sciences &amp; Humanities">
+                  <option>Social Sciences / Psychology</option>
+                  <option>Psychology</option>
+                  <option>Political Science</option>
+                  <option>International Relations</option>
+                  <option>Sociology</option>
+                  <option>Philosophy</option>
+                  <option>History</option>
+                  <option>Linguistics</option>
+                  <option>Translation Studies</option>
+                  <option>Education &amp; Teaching</option>
+                  <option>Sports Science</option>
+                </optgroup>
+                <optgroup label="Arts, Media &amp; Design">
+                  <option>Humanities / Arts</option>
+                  <option>Fine Arts</option>
+                  <option>Music</option>
+                  <option>Theatre &amp; Performance</option>
+                  <option>Graphic Design</option>
+                  <option>Fashion Design</option>
+                  <option>Media &amp; Communications</option>
+                  <option>Journalism</option>
+                  <option>Film &amp; Television</option>
+                </optgroup>
+                <optgroup label="Built Environment &amp; Other">
+                  <option>Architecture / Urban Planning</option>
+                  <option>Law</option>
+                  <option>Agriculture / Environmental Science</option>
+                  <option>Media / Communication</option>
+                  <option>Other</option>
+                </optgroup>
               </select>
             </div>
             <div class="form-row">
