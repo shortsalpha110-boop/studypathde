@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /leads
 
-Sitemap: https://studypathde.vercel.app/sitemap.xml
+Sitemap: https://www.studypathde.com/sitemap.xml
