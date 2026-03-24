@@ -589,16 +589,103 @@ body {
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
-  .navbar { padding: 16px 20px; }
+  /* Prevent horizontal scroll */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* NAVBAR */
+  .navbar { padding: 14px 16px; }
   .nav-links { display: none; }
-  .checker-wrapper { padding: 28px 20px; }
-  .checker-grid { grid-template-columns: 1fr; gap: 28px; }
-  .hero-stats { gap: 24px; }
+  .nav-cta { padding: 8px 14px; font-size: 0.82rem; }
+
+  /* HERO */
+  .hero { padding: 100px 16px 56px; }
+  .hero-title { font-size: 2.2rem !important; line-height: 1.1; }
+  .hero-subtitle { font-size: 1rem; margin-bottom: 28px; }
+  .hero-actions { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-ghost { width: 100%; justify-content: center; min-height: 52px; }
+  .hero-badge { font-size: 0.78rem; padding: 6px 12px; }
+  .hero-stats { gap: 16px; flex-wrap: wrap; justify-content: center; }
   .stat-num { font-size: 1.5rem; }
-  .form-row { grid-template-columns: 1fr; }
-  .results-actions { flex-direction: column; }
+  .stat-divider { height: 32px; }
+
+  /* SECTIONS */
+  .section { padding: 56px 0; }
+  .section-header { margin-bottom: 36px; }
+  .section-title { font-size: 1.8rem; }
+  .container { padding: 0 16px; }
+
+  /* STEPS */
+  .steps-grid { grid-template-columns: 1fr; gap: 14px; }
+  .step-card { padding: 24px 20px; }
+
+  /* CHECKER */
+  .checker-wrapper { padding: 22px 16px; border-radius: 16px; }
+  .checker-grid { grid-template-columns: 1fr; gap: 24px; }
+
+  /* DEGREE TABS */
+  .degree-tabs { flex-direction: column; gap: 8px; }
+  .degree-tab {
+    flex-direction: row; align-items: center;
+    gap: 12px; padding: 14px 16px; min-height: 56px;
+  }
+  .tab-label { display: none; }
+
+  /* DOC CARDS */
+  .doc-card { flex-wrap: wrap; padding: 14px 14px; }
+  .doc-card-body { flex: 1 1 100%; margin-bottom: 10px; }
+  .doc-right { width: 100%; justify-content: space-between; }
+  .doc-filename { max-width: 140px; }
+  .btn-upload-doc { min-height: 44px; }
+
+  /* FORM */
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .form-group select,
+  .form-group input {
+    font-size: 16px; /* prevents iOS auto-zoom */
+    min-height: 48px;
+    padding: 12px 14px;
+  }
+
+  /* BUTTONS — min 44px touch target */
+  .btn-primary { min-height: 52px; font-size: 0.95rem; padding: 14px 24px; }
+  .btn-ghost   { min-height: 52px; font-size: 0.95rem; padding: 14px 24px; }
+  .btn-primary.btn-full { width: 100%; justify-content: center; }
+
+  /* UNIVERSITY RESULTS */
+  .unis-grid { grid-template-columns: 1fr; gap: 14px; }
+  .results-actions { flex-direction: column; align-items: stretch; }
   .results-actions .btn-primary,
-  .results-actions .btn-ghost { justify-content: center; }
+  .results-actions .btn-ghost { width: 100%; justify-content: center; min-height: 52px; }
+
+  /* PRICING */
+  .pricing-grid { grid-template-columns: 1fr; gap: 18px; }
+  .pricing-card { padding: 28px 20px; }
+  .plan-price { font-size: 2.4rem; }
+
+  /* MODAL */
+  .modal-overlay { padding: 12px; align-items: flex-end; }
+  .modal-card {
+    max-width: 100%; width: 95vw;
+    padding: 32px 20px 28px;
+    border-radius: 20px 20px 14px 14px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 1.3rem; }
+
+  /* FOOTER */
+  .footer { padding: 32px 0; }
+
+  /* GENERAL TOUCH */
+  * { -webkit-tap-highlight-color: transparent; }
+  a, button { touch-action: manipulation; }
+  p, li, label { font-size: 14px; }
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 768px) {
+  * { animation-duration: 0.1s !important; }
 }
 
 /* ================================================================
