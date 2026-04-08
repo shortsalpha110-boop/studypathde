@@ -26,22 +26,28 @@ const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
 
 async function saveLeadToSupabase(lead) {
+  console.log('[Supabase] Attempting insert:', lead.name, lead.email);
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+    const res = await fetch('https://oohuqoznqpvrnfmauxtm.supabase.co/rest/v1/leads', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ',
         'Prefer': 'return=minimal',
       },
-      body: JSON.stringify({
-        name: lead.name,
-        email: lead.email,
-      }),
+      body: JSON.stringify({ name: lead.name, email: lead.email }),
     });
-    if (!res.ok) console.warn('Supabase save failed:', await res.text());
-  } catch (e) { console.warn('Supabase error:', e); }
+    console.log('[Supabase] Response status:', res.status);
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('[Supabase] Insert failed:', res.status, errText);
+    } else {
+      console.log('[Supabase] Insert successful');
+    }
+  } catch (e) {
+    console.error('[Supabase] Network error:', e);
+  }
 }
 
 // ---- ENGLISH LEVEL HELPERS ----
