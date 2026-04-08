@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.studypathde.com)",
+      "Bash(git add:*)",
+      "Bash(nslookup:*)"
+    ]
+  }
+}

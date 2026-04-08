@@ -403,16 +403,16 @@ body {
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* ---- LEAD CAPTURE ---- */
-.lead-capture-card {
+/* ---- LEAD GATE ---- */
+.lead-gate {
   max-width: 480px; margin: 0 auto;
-  text-align: center; padding: 16px;
+  text-align: center; padding: 24px 0 32px;
 }
-.lead-icon { font-size: 3rem; margin-bottom: 16px; }
-.lead-capture-card h3 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
-.lead-capture-card p { color: var(--text-muted); margin-bottom: 28px; }
-.lead-capture-card .form-group { text-align: left; }
-.lead-privacy { font-size: 0.8rem; color: var(--text-dim); margin-top: 14px; }
+.gate-icon { font-size: 3rem; margin-bottom: 16px; }
+.gate-title { font-size: 1.7rem; font-weight: 800; margin-bottom: 10px; }
+.gate-sub { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 28px; line-height: 1.6; }
+.gate-form { text-align: left; }
+.lead-privacy { font-size: 0.8rem; color: var(--text-dim); margin-top: 14px; text-align: center; }
 
 /* ---- RESULTS ---- */
 .results-header { text-align: center; margin-bottom: 36px; }
@@ -1037,4 +1037,79 @@ body {
   .doc-card-body { flex: 1 1 100%; }
   .doc-right { width: 100%; justify-content: space-between; }
   .doc-filename { max-width: 120px; }
+}
+
+/* ================================================================
+   PORTRAIT MOBILE FIXES (max-width: 480px)
+   ================================================================ */
+@media (max-width: 480px) {
+  /* NAVBAR — prevent overlap with content */
+  .navbar { padding: 10px 12px; }
+  .logo-text { font-size: 1rem; }
+  .logo-icon { font-size: 1.1rem; }
+  .nav-cta { padding: 7px 11px; font-size: 0.78rem; white-space: nowrap; }
+
+  /* HERO — prevent text overflow */
+  .hero { padding: 88px 12px 44px; }
+  .hero-title { font-size: 1.85rem !important; line-height: 1.12; }
+  .hero-subtitle { font-size: 0.93rem; margin-bottom: 24px; }
+  .hero-badge { font-size: 0.72rem; padding: 5px 10px; gap: 6px; }
+  .badge-dot { width: 6px; height: 6px; }
+
+  /* HERO STATS — prevent overflow on tiny screens */
+  .hero-stats { gap: 8px; flex-wrap: nowrap; }
+  .stat-num { font-size: 1.2rem; }
+  .stat-label { font-size: 0.7rem; }
+  .stat-divider { height: 28px; }
+
+  /* SECTIONS */
+  .section { padding: 48px 0; }
+  .section-title { font-size: 1.6rem; }
+  .container { padding: 0 12px; }
+
+  /* STEPS */
+  .step-card { padding: 20px 16px; }
+  .step-card h3 { font-size: 1.05rem; }
+  .step-icon { font-size: 2rem; }
+
+  /* CHECKER WRAPPER */
+  .checker-wrapper { padding: 16px 12px; border-radius: 14px; }
+
+  /* DEGREE TABS */
+  .degree-tab { padding: 10px 12px; gap: 8px; min-height: 50px; }
+  .tab-title { font-size: 0.85rem; }
+  .tab-sub { font-size: 0.68rem; }
+
+  /* DOC CARDS — prevent text overflow */
+  .doc-name { font-size: 0.82rem; white-space: normal; }
+  .doc-hint { font-size: 0.7rem; }
+  .doc-badge { font-size: 0.6rem; padding: 2px 6px; }
+  .doc-filename { max-width: 90px; font-size: 0.72rem; }
+  .btn-upload-doc { font-size: 0.75rem; padding: 7px 12px; }
+
+  /* FORM FIELDS */
+  .form-section-title { font-size: 0.95rem; }
+  .form-group label { font-size: 0.8rem; }
+
+  /* BUTTONS */
+  .btn-primary { font-size: 0.88rem; padding: 13px 20px; min-height: 48px; }
+  .btn-ghost   { font-size: 0.88rem; padding: 13px 20px; min-height: 48px; }
+
+  /* LEAD GATE */
+  .gate-title { font-size: 1.4rem; }
+  .gate-sub { font-size: 0.87rem; margin-bottom: 20px; }
+
+  /* RESULTS */
+  .results-title { font-size: 1.25rem; }
+  .uni-name { font-size: 0.92rem; }
+
+  /* PRICING */
+  .pricing-card { padding: 24px 16px; }
+  .plan-price { font-size: 2rem; }
+  .plan-name { font-size: 1.15rem; }
+  .plan-features li { font-size: 0.83rem; }
+
+  /* FOOTER */
+  .footer { padding: 28px 0; }
+  .footer-tagline, .footer-copy { font-size: 0.78rem; }
 }

@@ -22,11 +22,10 @@
    ============================================ */
 
 // ---- SUPABASE CONFIG ----
-const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
 
 async function saveLeadToSupabase(lead) {
-  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
       method: 'POST',
@@ -37,10 +36,8 @@ async function saveLeadToSupabase(lead) {
         'Prefer': 'return=minimal',
       },
       body: JSON.stringify({
-        name: lead.name, email: lead.email, whatsapp: lead.whatsapp || null,
-        country: lead.country, grade: lead.grade, field: lead.field,
-        degree_level: lead.degree, german_level: lead.german, english_level: lead.english,
-        matched_unis: lead.unis || [], timestamp: lead.timestamp,
+        name: lead.name,
+        email: lead.email,
       }),
     });
     if (!res.ok) console.warn('Supabase save failed:', await res.text());
@@ -538,9 +535,37 @@ window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', wi
 // ---- APP STATE ----
 let currentProfile = {};
 let matchedUnis = [];
+let gateSubmitted = false;
+let gateName = '';
+let gateEmail = '';
+
+// ---- LEAD GATE SUBMIT ----
+document.getElementById('btnGateSubmit').addEventListener('click', async () => {
+  const name  = document.getElementById('gateName').value.trim();
+  const email = document.getElementById('gateEmail').value.trim();
+  if (!name)                          { showToast('Please enter your name.', 'error'); return; }
+  if (!email || !isValidEmail(email)) { showToast('Please enter a valid email.', 'error'); return; }
+
+  gateName  = name;
+  gateEmail = email;
+  gateSubmitted = true;
+
+  saveLeadToSupabase({ name, email });
+  saveLead({ name, email, timestamp: new Date().toISOString() });
+
+  document.getElementById('leadGate').style.display = 'none';
+  document.getElementById('checkerContent').style.display = 'block';
+  showToast('Welcome! Upload your documents and fill your details below.', 'success');
+});
 
 // ---- STEP 1: CHECK ELIGIBILITY ----
 document.getElementById('btnCheck').addEventListener('click', () => {
+  if (!gateSubmitted) {
+    showToast('Please enter your name and email to continue.', 'error');
+    document.getElementById('leadGate').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
   const country = document.getElementById('country').value;
   const grade   = document.getElementById('grade').value;
   const field   = document.getElementById('field').value;
@@ -557,35 +582,11 @@ document.getElementById('btnCheck').addEventListener('click', () => {
     showToast('Please upload: ' + missing[0].label, 'error'); return;
   }
 
-  currentProfile = { country, grade, field, german, english, degree: currentDegreeLevel };
+  currentProfile = { country, grade, field, german, english, degree: currentDegreeLevel, name: gateName, email: gateEmail };
   matchedUnis = matchUniversities(currentProfile);
 
-  document.getElementById('modalMatchCount').textContent = matchedUnis.length;
-  document.getElementById('modalCountry').value = country;
-  openModal();
-});
-
-// ---- MODAL ----
-function openModal() { document.getElementById('leadModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
-function closeModal() { document.getElementById('leadModal').classList.remove('active'); document.body.style.overflow = ''; }
-document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('leadModal').addEventListener('click', (e) => { if (e.target === document.getElementById('leadModal')) closeModal(); });
-
-document.getElementById('btnModalReveal').addEventListener('click', () => {
-  const name     = document.getElementById('modalName').value.trim();
-  const email    = document.getElementById('modalEmail').value.trim();
-  const whatsapp = document.getElementById('modalWhatsapp').value.trim();
-  if (!name)                          { showToast('Please enter your full name.', 'error'); return; }
-  if (!email || !isValidEmail(email)) { showToast('Please enter a valid email address.', 'error'); return; }
-
-  currentProfile.name = name; currentProfile.email = email; currentProfile.whatsapp = whatsapp;
-  const lead = { ...currentProfile, timestamp: new Date().toISOString(), unis: matchedUnis.map(u => u.name) };
-  saveLead(lead);
-  saveLeadToSupabase(lead);
-
-  closeModal();
-  renderResults(name, matchedUnis);
-  document.getElementById('step-details').style.display = 'none';
+  renderResults(gateName, matchedUnis);
+  document.getElementById('checkerContent').style.display = 'none';
   document.getElementById('step-results').style.display = 'block';
   document.getElementById('step-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });

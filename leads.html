@@ -209,21 +209,6 @@
         <div class="stat-value" id="sWeek">0</div>
         <div class="stat-sub">Last 7 days</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-label">Top Country</div>
-        <div class="stat-value" id="sCountry" style="font-size:1.3rem;padding-top:4px">—</div>
-        <div class="stat-sub">Most common origin</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Top Field</div>
-        <div class="stat-value" id="sField" style="font-size:1rem;padding-top:8px;line-height:1.2">—</div>
-        <div class="stat-sub">Most popular study field</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">With WhatsApp</div>
-        <div class="stat-value" id="sWa">0</div>
-        <div class="stat-sub">Provided WhatsApp</div>
-      </div>
     </div>
 
     <!-- Table -->
@@ -235,23 +220,16 @@
         </div>
       </div>
       <div class="search-bar">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, country, WhatsApp, or field…" />
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by name or email…" />
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th>Student</th>
-              <th>WhatsApp</th>
-              <th>Country</th>
-              <th>Grade</th>
-              <th>Field</th>
-              <th>German</th>
-              <th>English</th>
-              <th>Matched Universities</th>
+              <th>Name</th>
+              <th>Email</th>
               <th>Submitted</th>
-              <th>Action</th>
             </tr>
           </thead>
           <tbody id="leadsBody"></tbody>
@@ -267,7 +245,8 @@
 </div>
 
 <script>
-  const KEY      = 'studypathde_leads';
+  const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
   const PASSWORD = 'StudyPathDE2025';
   const AUTH_KEY = 'spde_auth';
 
@@ -296,26 +275,29 @@
     location.reload();
   });
 
-  // ── Data ──
-  function getLeads() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
+  // ── Supabase Fetch ──
+  async function fetchLeads() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/leads?select=name,email,created_at&order=created_at.desc`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          }
+        }
+      );
+      if (!res.ok) { console.error('Supabase fetch failed:', await res.text()); return []; }
+      return await res.json();
+    } catch (e) { console.error('Supabase error:', e); return []; }
   }
 
+  // ── Helpers ──
   function formatDate(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function gradeLabel(g) {
-    const m = { excellent:'Excellent', very_good:'Very Good', good:'Good', average:'Average', below_average:'Below Avg' };
-    return m[g] || g || '—';
-  }
-
-  function englishLabel(v) {
-    const m = { ielts_5:'IELTS 5-5.5', ielts_6:'IELTS 6.0', ielts_6_5:'IELTS 6.5', ielts_7:'IELTS 7+', toefl_79:'TOEFL ≤79', toefl_80:'TOEFL 80-95', toefl_96:'TOEFL 96+', native:'Native', none:'No Cert' };
-    return m[v] || (v || '—').toUpperCase();
   }
 
   function isToday(iso) {
@@ -328,13 +310,6 @@
     return (Date.now() - new Date(iso).getTime()) < 7 * 24 * 60 * 60 * 1000;
   }
 
-  function topValue(arr) {
-    if (!arr.length) return '—';
-    const f = {};
-    arr.forEach(v => { if (v) f[v] = (f[v] || 0) + 1; });
-    return Object.entries(f).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
-  }
-
   function esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
@@ -343,16 +318,8 @@
 
   function renderStats(leads) {
     document.getElementById('sTotal').textContent = leads.length;
-    document.getElementById('sToday').textContent = leads.filter(l => isToday(l.timestamp)).length;
-    document.getElementById('sWeek').textContent  = leads.filter(l => isThisWeek(l.timestamp)).length;
-    document.getElementById('sWa').textContent    = leads.filter(l => l.whatsapp).length;
-    const tc = topValue(leads.map(l => l.country));
-    document.getElementById('sCountry').textContent = tc.length > 14 ? tc.slice(0,12)+'…' : tc;
-    document.getElementById('sCountry').title = tc;
-    const tf = topValue(leads.map(l => l.field));
-    const tfEl = document.getElementById('sField');
-    tfEl.textContent = tf.length > 22 ? tf.slice(0,20)+'…' : tf;
-    tfEl.title = tf;
+    document.getElementById('sToday').textContent = leads.filter(l => isToday(l.created_at)).length;
+    document.getElementById('sWeek').textContent  = leads.filter(l => isThisWeek(l.created_at)).length;
   }
 
   function renderTable(leads) {
@@ -360,54 +327,27 @@
     const empty = document.getElementById('emptyState');
     if (!leads.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    tbody.innerHTML = leads.map((l, i) => {
-      const unis   = (l.unis || []).slice(0, 3);
-      const extra  = (l.unis || []).length - 3;
-      const idx    = allLeads.findIndex(x => x.timestamp === l.timestamp && x.email === l.email);
-      return `<tr>
-        <td style="color:var(--dim);font-size:0.75rem">${leads.length - i}</td>
-        <td>
-          <div class="cell-name">${esc(l.name || '—')}</div>
-          <div class="cell-email">${esc(l.email || '—')}</div>
-        </td>
-        <td><div class="cell-wa">${esc(l.whatsapp || '—')}</div></td>
-        <td>🌍 ${esc(l.country || '—')}</td>
-        <td><span class="grade-badge g-${l.grade || ''}">${gradeLabel(l.grade)}</span></td>
-        <td style="max-width:160px;font-size:0.8rem">${esc(l.field || '—')}</td>
-        <td style="font-size:0.8rem;color:var(--muted)">${(l.german || '—').toUpperCase()}</td>
-        <td style="font-size:0.8rem;color:var(--muted)">${englishLabel(l.english)}</td>
-        <td>${unis.map(u => `<span class="uni-pill">${esc(u)}</span>`).join('')}${extra > 0 ? `<span style="font-size:0.68rem;color:var(--dim)"> +${extra}</span>` : ''}</td>
-        <td class="ts">${formatDate(l.timestamp)}</td>
-        <td><button class="del-btn" data-idx="${idx}" onclick="deleteLead(${idx})">Delete</button></td>
-      </tr>`;
-    }).join('');
+    tbody.innerHTML = leads.map((l, i) => `<tr>
+      <td style="color:var(--dim);font-size:0.75rem">${leads.length - i}</td>
+      <td><div class="cell-name">${esc(l.name || '—')}</div></td>
+      <td><div class="cell-email">${esc(l.email || '—')}</div></td>
+      <td class="ts">${formatDate(l.created_at)}</td>
+    </tr>`).join('');
   }
-
-  window.deleteLead = function(idx) {
-    if (!confirm('Delete this lead?')) return;
-    let leads = getLeads();
-    leads.splice(idx, 1);
-    localStorage.setItem(KEY, JSON.stringify(leads));
-    allLeads = leads.slice().reverse();
-    renderStats(allLeads);
-    renderTable(allLeads);
-  };
 
   document.getElementById('searchInput').addEventListener('input', function () {
     const q = this.value.toLowerCase().trim();
     if (!q) { renderTable(allLeads); return; }
     renderTable(allLeads.filter(l =>
-      [l.name, l.email, l.country, l.field, l.whatsapp].some(v => (v||'').toLowerCase().includes(q))
+      [l.name, l.email].some(v => (v||'').toLowerCase().includes(q))
     ));
   });
 
   document.getElementById('btnExport').addEventListener('click', () => {
-    const leads = getLeads();
-    if (!leads.length) { alert('No leads to export.'); return; }
-    const headers = ['Name','Email','WhatsApp','Country','Grade','Field','German','English','Universities','Timestamp'];
-    const rows = leads.map(l => [
-      l.name||'', l.email||'', l.whatsapp||'', l.country||'', l.grade||'',
-      l.field||'', l.german||'', l.english||'', (l.unis||[]).join('; '), l.timestamp||''
+    if (!allLeads.length) { alert('No leads to export.'); return; }
+    const headers = ['Name','Email','Submitted'];
+    const rows = allLeads.map(l => [
+      l.name||'', l.email||'', l.created_at||''
     ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
     const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
@@ -417,15 +357,16 @@
   });
 
   document.getElementById('btnClearAll').addEventListener('click', () => {
-    if (!confirm('Delete ALL leads permanently? This cannot be undone.')) return;
-    localStorage.removeItem(KEY);
-    allLeads = [];
-    renderStats([]); renderTable([]);
+    alert('To delete leads, please use the Supabase dashboard at supabase.com.');
   });
 
-  function init() {
-    allLeads = getLeads().slice().reverse();
-    renderStats(allLeads); renderTable(allLeads);
+  async function init() {
+    document.getElementById('sTotal').textContent = '…';
+    document.getElementById('sToday').textContent = '…';
+    document.getElementById('sWeek').textContent  = '…';
+    allLeads = await fetchLeads();
+    renderStats(allLeads);
+    renderTable(allLeads);
   }
 
   // Auto-show if already authed this session
