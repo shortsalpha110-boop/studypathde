@@ -23,11 +23,11 @@
 
 // ---- SUPABASE CONFIG ----
 const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
+const SUPABASE_ANON_KEY = 'sb_publishable_s6whvRTujEpgdpnA47woSQ_rejwaa8I';
 
 async function submitLead(name, email) {
   const SUPABASE_URL = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.8Q3n9dBCLAFbSduvGFyOXzFHbFpKjWKrZlKkrPnBlb0';
+  const SUPABASE_KEY = 'sb_publishable_s6whvRTujEpgdpnA47woSQ_rejwaa8I';
   const url = `${SUPABASE_URL}/rest/v1/leads`;
   const headers = {
     'Content-Type': 'application/json',
