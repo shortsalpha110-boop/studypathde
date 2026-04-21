@@ -52,7 +52,9 @@
       transition: opacity 0.2s, transform 0.1s;
     }
     .lock-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .lock-error { color: #f87171; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .lock-error   { color: #f87171; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .lock-locked  { color: #fbbf24; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .lock-attempts{ color: #f87171; font-size: 0.78rem; margin-top: 6px; display: none; }
 
     /* ── HEADER ── */
     .dash-header {
@@ -172,7 +174,9 @@
     <p class="lock-sub">Enter the admin password to view lead data.</p>
     <input type="password" class="lock-input" id="pwInput" placeholder="Password" autocomplete="off" />
     <button class="lock-btn" id="pwBtn">Unlock Dashboard</button>
-    <p class="lock-error" id="pwError">Incorrect password. Please try again.</p>
+    <p class="lock-error"    id="pwError">Incorrect password. Please try again.</p>
+    <p class="lock-attempts" id="pwAttempts"></p>
+    <p class="lock-locked"   id="pwLocked"></p>
   </div>
 </div>
 
@@ -247,8 +251,54 @@
 <script>
   const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
-  const PASSWORD = 'StudyPathDE2025';
-  const AUTH_KEY = 'spde_auth';
+  const PASSWORD      = 'StudyPathDE2025';
+  const AUTH_KEY      = 'spde_auth';
+  const ATTEMPTS_KEY  = 'spde_attempts';
+  const LOCKOUT_KEY   = 'spde_lockout';
+  const MAX_ATTEMPTS  = 5;
+  const LOCKOUT_MS    = 15 * 60 * 1000; // 15 minutes
+
+  // ── Rate limiter helpers ──
+  function getAttempts() { return parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0', 10); }
+  function setAttempts(n) { localStorage.setItem(ATTEMPTS_KEY, String(n)); }
+  function getLockoutUntil() { return parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10); }
+  function setLockoutUntil(ts) { localStorage.setItem(LOCKOUT_KEY, String(ts)); }
+
+  function isLockedOut() { return Date.now() < getLockoutUntil(); }
+
+  let countdownTimer = null;
+
+  function startCountdown() {
+    const lockedEl   = document.getElementById('pwLocked');
+    const pwInput    = document.getElementById('pwInput');
+    const pwBtn      = document.getElementById('pwBtn');
+    pwInput.disabled = true;
+    pwBtn.disabled   = true;
+    pwBtn.style.opacity = '0.4';
+    lockedEl.style.display = 'block';
+    document.getElementById('pwError').style.display    = 'none';
+    document.getElementById('pwAttempts').style.display = 'none';
+
+    function tick() {
+      const remaining = getLockoutUntil() - Date.now();
+      if (remaining <= 0) {
+        clearInterval(countdownTimer);
+        localStorage.removeItem(LOCKOUT_KEY);
+        setAttempts(0);
+        pwInput.disabled = false;
+        pwBtn.disabled   = false;
+        pwBtn.style.opacity = '1';
+        lockedEl.style.display = 'none';
+        pwInput.focus();
+        return;
+      }
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      lockedEl.textContent = `Too many failed attempts. Try again in ${mins}:${String(secs).padStart(2,'0')}.`;
+    }
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
 
   // ── Auth ──
   function isAuthed() { return sessionStorage.getItem(AUTH_KEY) === '1'; }
@@ -257,18 +307,36 @@
   document.getElementById('pwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
 
   function tryUnlock() {
+    if (isLockedOut()) { startCountdown(); return; }
     const val = document.getElementById('pwInput').value;
     if (val === PASSWORD) {
+      setAttempts(0);
+      localStorage.removeItem(LOCKOUT_KEY);
       sessionStorage.setItem(AUTH_KEY, '1');
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       init();
     } else {
-      document.getElementById('pwError').style.display = 'block';
+      const attempts = getAttempts() + 1;
+      setAttempts(attempts);
       document.getElementById('pwInput').value = '';
       document.getElementById('pwInput').focus();
+      if (attempts >= MAX_ATTEMPTS) {
+        setLockoutUntil(Date.now() + LOCKOUT_MS);
+        setAttempts(0);
+        startCountdown();
+      } else {
+        const remaining = MAX_ATTEMPTS - attempts;
+        document.getElementById('pwError').style.display    = 'block';
+        document.getElementById('pwAttempts').style.display = 'block';
+        document.getElementById('pwAttempts').textContent   =
+          `${remaining} attempt${remaining === 1 ? '' : 's'} remaining before 15-minute lockout.`;
+      }
     }
   }
+
+  // Check lockout on page load
+  if (isLockedOut()) { startCountdown(); }
 
   document.getElementById('btnLogout').addEventListener('click', () => {
     sessionStorage.removeItem(AUTH_KEY);

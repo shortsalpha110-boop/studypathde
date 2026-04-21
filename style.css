@@ -403,6 +403,15 @@ body {
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* ---- CHECKER CONTENT FADE-IN ---- */
+@keyframes fadeInReveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.checker-content-visible {
+  animation: fadeInReveal 0.45s ease forwards;
+}
+
 /* ---- LEAD GATE ---- */
 .lead-gate {
   max-width: 480px; margin: 0 auto;
@@ -1098,16 +1107,30 @@ body {
   /* LEAD GATE */
   .gate-title { font-size: 1.4rem; }
   .gate-sub { font-size: 0.87rem; margin-bottom: 20px; }
+  .gate-form .form-group { margin-bottom: 14px; }
+  .gate-form input { font-size: 0.9rem; padding: 12px 14px; }
+
+  /* FORM SELECTS — prevent overflow */
+  .form-row { flex-direction: column; gap: 10px; }
+  select { font-size: 0.88rem; max-width: 100%; width: 100%; }
+  .form-group select { padding: 11px 12px; }
+
+  /* CHECKER GRID — stack on mobile */
+  .checker-grid { grid-template-columns: 1fr; gap: 20px; }
 
   /* RESULTS */
   .results-title { font-size: 1.25rem; }
   .uni-name { font-size: 0.92rem; }
+  .results-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .results-actions .btn-primary,
+  .results-actions .btn-ghost { justify-content: center; text-align: center; }
 
   /* PRICING */
   .pricing-card { padding: 24px 16px; }
   .plan-price { font-size: 2rem; }
   .plan-name { font-size: 1.15rem; }
   .plan-features li { font-size: 0.83rem; }
+  .pricing-grid { grid-template-columns: 1fr; }
 
   /* FOOTER */
   .footer { padding: 28px 0; }

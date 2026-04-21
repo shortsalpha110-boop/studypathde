@@ -571,9 +571,17 @@ document.getElementById('btnGateSubmit').addEventListener('click', async () => {
   submitLead(name, email);
   saveLead({ name, email, timestamp: new Date().toISOString() });
 
-  document.getElementById('leadGate').style.display = 'none';
-  document.getElementById('checkerContent').style.display = 'block';
-  showToast('Welcome! Upload your documents and fill your details below.', 'success');
+  const gate    = document.getElementById('leadGate');
+  const content = document.getElementById('checkerContent');
+  gate.style.transition = 'opacity 0.25s ease';
+  gate.style.opacity = '0';
+  setTimeout(() => {
+    gate.style.display = 'none';
+    content.style.display = 'block';
+    content.classList.add('checker-content-visible');
+    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 250);
+  showToast('Welcome! Fill in your details below.', 'success');
 });
 
 // ---- STEP 1: CHECK ELIGIBILITY ----
@@ -1531,6 +1539,44 @@ function saveLead(lead) {
 
 // ---- EMAIL VALIDATION ----
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+// ---- WAITLIST ----
+(function() {
+  const btn = document.getElementById('btnNotifyMe');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const form = document.getElementById('waitlistForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form.style.display === 'block') document.getElementById('waitlistEmail').focus();
+  });
+
+  document.getElementById('btnWaitlistSubmit').addEventListener('click', async () => {
+    const email = document.getElementById('waitlistEmail').value.trim();
+    if (!email || !isValidEmail(email)) {
+      showToast('Please enter a valid email address.', 'error'); return;
+    }
+    const SUPABASE_URL = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTkyMzEsImV4cCI6MjA5MTIzNTIzMX0._rdKfVydFW0TC4SZ6zgkULsZ7IJaKM3s2pVU24SgYTU';
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ email })
+      });
+    } catch (e) { /* silent — still show confirmation */ }
+    document.getElementById('waitlistMsg').style.display = 'block';
+    document.getElementById('waitlistEmail').style.display = 'none';
+    document.getElementById('btnWaitlistSubmit').style.display = 'none';
+    document.getElementById('btnNotifyMe').textContent = "You're on the list!";
+    document.getElementById('btnNotifyMe').style.opacity = '0.6';
+    document.getElementById('btnNotifyMe').disabled = true;
+  });
+})();
 
 // ---- TOAST ----
 function showToast(message, type = 'info') {

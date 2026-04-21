@@ -9,6 +9,8 @@
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.studypathde.com" />
   <meta name="google-site-verification" content="aW-0bojZOOkc2mOuFPapZgZ6lXysxMkyjYi01f3N-ec" />
+  <meta name="theme-color" content="#0D0D0D">
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
   <meta name="application-name" content="StudyPathDE">
   <meta name="author" content="StudyPathDE">
   <meta property="og:site_name" content="StudyPathDE">
@@ -103,18 +105,18 @@
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <span class="stat-num">500+</span>
-        <span class="stat-label">Students Helped</span>
+        <span class="stat-num">1,000+</span>
+        <span class="stat-label">Students Guided</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
-        <span class="stat-num">97%</span>
-        <span class="stat-label">Match Accuracy</span>
+        <span class="stat-num">17+</span>
+        <span class="stat-label">Universities Matched</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
-        <span class="stat-num">200+</span>
-        <span class="stat-label">Partner Universities</span>
+        <span class="stat-num">40+</span>
+        <span class="stat-label">Fields Covered</span>
       </div>
     </div>
   </div>
@@ -453,7 +455,23 @@
           <li><span class="feat-check gold">✓</span> Admission status tracking</li>
           <li><span class="feat-check muted">◷</span> <span class="feat-muted">Visa Guidance — Coming Soon</span></li>
         </ul>
-        <button class="btn-plan btn-plan-premium" disabled>Coming Soon — Notify Me</button>
+        <button class="btn-plan btn-plan-premium" id="btnNotifyMe">Coming Soon — Notify Me</button>
+        <div id="waitlistForm" style="display:none;margin-top:14px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="email" id="waitlistEmail" placeholder="your@email.com"
+              style="flex:1;min-width:0;padding:11px 14px;border-radius:8px;border:1px solid rgba(212,168,67,0.3);
+                     background:rgba(255,255,255,0.04);color:#e8eaf0;font-family:inherit;font-size:0.9rem;outline:none;" />
+            <button id="btnWaitlistSubmit"
+              style="padding:11px 18px;border-radius:8px;border:none;cursor:pointer;
+                     background:linear-gradient(135deg,#d4a843,#a8832e);color:#080b12;
+                     font-family:inherit;font-size:0.9rem;font-weight:700;white-space:nowrap;">
+              Notify Me
+            </button>
+          </div>
+          <p id="waitlistMsg" style="display:none;margin-top:10px;font-size:0.85rem;color:#22c55e;font-weight:600;">
+            ✓ You're on the list! We'll notify you when it launches.
+          </p>
+        </div>
       </div>
 
     </div>
