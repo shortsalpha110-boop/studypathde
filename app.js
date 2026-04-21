@@ -25,28 +25,35 @@
 const SUPABASE_URL      = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
 
-async function saveLeadToSupabase(lead) {
-  console.log('[Supabase] Attempting insert:', lead.name, lead.email);
+async function submitLead(name, email) {
+  const SUPABASE_URL = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
+
   try {
-    const res = await fetch('https://oohuqoznqpvrnfmauxtm.supabase.co/rest/v1/leads', {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ',
-        'Prefer': 'return=minimal',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ name: lead.name, email: lead.email }),
+      body: JSON.stringify({ name: name, email: email })
     });
-    console.log('[Supabase] Response status:', res.status);
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('[Supabase] Insert failed:', res.status, errText);
+
+    console.log('Supabase response status:', response.status);
+
+    if (response.ok || response.status === 201) {
+      console.log('Lead saved successfully');
+      return true;
     } else {
-      console.log('[Supabase] Insert successful');
+      const errorText = await response.text();
+      console.error('Supabase error:', errorText);
+      return false;
     }
-  } catch (e) {
-    console.error('[Supabase] Network error:', e);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    return false;
   }
 }
 
@@ -556,7 +563,7 @@ document.getElementById('btnGateSubmit').addEventListener('click', async () => {
   gateEmail = email;
   gateSubmitted = true;
 
-  saveLeadToSupabase({ name, email });
+  submitLead(name, email);
   saveLead({ name, email, timestamp: new Date().toISOString() });
 
   document.getElementById('leadGate').style.display = 'none';
