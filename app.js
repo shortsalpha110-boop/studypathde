@@ -527,7 +527,7 @@ function getPersonalChecklist(profile, countryData) {
     { category:'English', text: englishToLevel(profile.english) === 'none'
         ? 'Consider taking IELTS or TOEFL if applying to English-taught programs. IELTS 6.5 is the most widely accepted score.'
         : `Your ${formatEnglishShort(profile.english)} score should be sufficient. Keep the original certificate safe.` },
-    { category:'Finances', text:'Open a German blocked account (Sperrkonto) with Fintiba or Expatrio. Deposit EUR 13,092. You will need the confirmation certificate for your visa.' },
+    { category:'Finances', text:'Open a German blocked account (Sperrkonto) with Fintiba or Expatrio. Deposit EUR 11,904. You will need the confirmation certificate for your visa.' },
     { category:'University', text:`Research your top 3-5 matched universities. Visit each university International Office page and confirm entry requirements for ${profile.field} at ${level} level.` },
     { category:'Application', text: level === 'phd'
         ? 'For PhD: Contact potential supervisors directly by email before applying. Attach your research proposal. Some universities require supervisor acceptance before formal application.'
@@ -535,7 +535,7 @@ function getPersonalChecklist(profile, countryData) {
     { category:'Accommodation', text:'Apply for student dormitory (Studentenwohnheim) via the Studierendenwerk as soon as you receive your admission letter. Waiting lists can be very long.' },
     { category:'Health Insurance', text:'Arrange German public health insurance (gesetzliche Krankenversicherung) before arriving. TK Techniker Krankenkasse is recommended - EUR 120-130/month for students under 30.' },
     { category:'Visa', text:`Book your student visa appointment at the ${countryData.visaEmbassy} as early as possible. Expected processing time: ${countryData.visaTimeline}.` },
-    { category:'Visa Docs', text:`Prepare visa documents: passport, admission letter, blocked account certificate (EUR 13,092), health insurance, photos, completed visa form, EUR 75 fee. ${countryData.additionalVisaDoc}.` },
+    { category:'Visa Docs', text:`Prepare visa documents: passport, admission letter, blocked account certificate (EUR 11,904), health insurance, photos, completed visa form, EUR 75 fee. ${countryData.additionalVisaDoc}.` },
     { category:'Arrival', text:'On arrival in Germany: register your address (Anmeldung) at the local Buergeramt within 14 days, enrol at university (Immatrikulation), activate health insurance, open a German bank account.' },
   ];
   return items;
@@ -810,7 +810,7 @@ function generatePDF(profile, unis) {
     ['01', 'Eligibility Summary',                   '2'],
     ['02', 'Your Matched Universities (Top 5)',      '3'],
     ['03', 'Step-by-Step Application Guide',         '4'],
-    ['04', 'Blocked Account Guide  \u2014  EUR 13,092', '5'],
+    ['04', 'Blocked Account Guide  \u2014  EUR 11,904', '5'],
     ['05', 'Visa Application Guide',                 '6'],
     ['06', 'Living in Germany  \u2014  2025 Cost Guide', '7'],
     ['07', 'Your Personal Checklist',                '8'],
@@ -1096,11 +1096,11 @@ function generatePDF(profile, unis) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(28);
   doc.setTextColor(...GOLD);
-  doc.text('EUR 13,092', W / 2, y + 16, { align: 'center' });
+  doc.text('EUR 11,904', W / 2, y + 16, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...MUTED);
-  doc.text('Required for one year  |  EUR 1,091 released monthly after arrival  (updated 2025)', W / 2, y + 24, { align: 'center' });
+  doc.text('Required for one year  |  EUR 992 released monthly after arrival  (updated 2025)', W / 2, y + 24, { align: 'center' });
   y += 34;
 
   // What is it
@@ -1110,7 +1110,7 @@ function generatePDF(profile, unis) {
   doc.setTextColor(...WHITE);
   doc.text('What is a Blocked Account?', M, y);
   y += 6;
-  var baText = 'A Sperrkonto (blocked account) is a special German bank account required for your student visa. You deposit EUR 13,092 which is frozen until you arrive in Germany, then released as EUR 1,091/month. This proves to the German embassy you can financially support yourself for one year of study.';
+  var baText = 'A Sperrkonto (blocked account) is a special German bank account required for your student visa. You deposit EUR 11,904 which is frozen until you arrive in Germany, then released as EUR 992/month. This proves to the German embassy you can financially support yourself for one year of study.';
   var baLines = doc.splitTextToSize(baText, CW);
   y = cy(y, baLines.length * 4.5);
   doc.setFont('helvetica', 'normal');
@@ -1182,10 +1182,10 @@ function generatePDF(profile, unis) {
     'Visit fintiba.com and click \u201cOpen Blocked Account\u201d.',
     'Complete identity verification (KYC) with your passport \u2014 takes approximately 5 minutes.',
     'Receive your IBAN and account details by email within 2\u20135 business days.',
-    'Transfer EUR 13,092 from your home bank to the Fintiba IBAN provided.',
+    'Transfer EUR 11,904 from your home bank to the Fintiba IBAN provided.',
     'Fintiba sends a confirmation certificate once funds are received and verified.',
     'Include this certificate in your student visa application documents.',
-    'After arriving in Germany: EUR 1,091 is released to you each month.',
+    'After arriving in Germany: EUR 992 is released to you each month.',
   ];
   bSteps.forEach(function(s, i) {
     var sLines = doc.splitTextToSize(s, CW - 14);
@@ -1254,7 +1254,7 @@ function generatePDF(profile, unis) {
   var visaDocs = [
     'Valid passport (minimum 6 months validity beyond intended stay)',
     'University admission letter (Zulassungsbescheid)',
-    'Blocked account certificate \u2014 Fintiba or Expatrio (EUR 13,092)',
+    'Blocked account certificate \u2014 Fintiba or Expatrio (EUR 11,904)',
     'Health insurance covering Germany',
     'Biometric passport photos (35mm \u00d7 45mm)',
     'Proof of accommodation in Germany (first months at minimum)',
@@ -1457,7 +1457,7 @@ function generatePDF(profile, unis) {
     { n: '02', title: 'This Week',
       body: 'Check the Anabin database (anabin.kmk.org) to confirm your institution is recognised. Start document preparation \u2014 certified translations take time to arrange.' },
     { n: '03', title: 'Within 2 Weeks',
-      body: 'Open your blocked account (Fintiba or Expatrio) and begin the transfer of EUR 13,092. Start the KYC verification process immediately as it can take several days.' },
+      body: 'Open your blocked account (Fintiba or Expatrio) and begin the transfer of EUR 11,904. Start the KYC verification process immediately as it can take several days.' },
     { n: '04', title: 'Before Applying',
       body: 'Book your visa appointment at the German embassy. Secure your language certificate if needed. Begin your accommodation search in Germany.' },
     { n: '05', title: 'Application Season',
