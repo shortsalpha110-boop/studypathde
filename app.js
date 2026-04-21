@@ -629,580 +629,888 @@ document.getElementById('btnDownloadPDF').addEventListener('click', () => genera
 // ================================================================
 function generatePDF(profile, unis) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210, H = 297;
+  const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W    = 210, H = 297;
+  const M    = 12;                 // margin
+  const CW   = W - M * 2;         // content width
+  const SAFE = 275;                // max y before page break
 
-  // Color palette (RGB arrays)
-  const BG    = [8,   11,  18];
-  const CARD  = [14,  20,  32];
-  const CARD2 = [18,  24,  38];
-  const GOLD  = [212, 168, 67];
-  const WHITE = [232, 234, 240];
-  const MUTED = [122, 130, 153];
-  const DIM   = [74,  81,  104];
-  const GREEN = [34,  197, 94];
-  const BLUE  = [99,  102, 241];
+  // ---- COLOUR PALETTE ----
+  const BG    = [13,  13,  13];
+  const CARD  = [26,  26,  26];
+  const CARD2 = [32,  32,  32];
+  const GOLD  = [201, 168, 76];
+  const WHITE = [232, 232, 232];
+  const MUTED = [136, 136, 136];
+  const DIM   = [80,  80,  80];
+  const GREEN = [46,  125, 82];
 
-  const cd    = getCountryData(profile.country);
-  const gc    = getGradeConversion(profile.grade);
-  const check = getPersonalChecklist(profile, cd);
-  const top5  = unis.slice(0, 5);
+  const cd          = getCountryData(profile.country);
+  const gc          = getGradeConversion(profile.grade);
+  const check       = getPersonalChecklist(profile, cd);
+  const top5        = unis.slice(0, 5);
   const degreeLabel = { bachelor:"Bachelor's Degree", master:"Master's Degree", phd:"PhD / Doctorate" }[profile.degree] || "Bachelor's Degree";
 
   let pageNum = 0;
 
   // ---- HELPERS ----
-  function bg() { doc.setFillColor(...BG); doc.rect(0, 0, W, H, 'F'); }
+  function fillBg() {
+    doc.setFillColor(...BG);
+    doc.rect(0, 0, W, H, 'F');
+  }
 
-  function addPageHeader() {
+  function drawFooter() {
+    doc.setFillColor(...GOLD);
+    doc.rect(M, H - 13, CW, 0.4, 'F');
+    doc.setFillColor(...CARD);
+    doc.rect(0, H - 12, W, 12, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.text('StudyPathDE  |  studypathde.com', M, H - 5);
+    doc.setTextColor(...GOLD);
+    doc.text('Personalised for ' + profile.name + '  |  Page ' + pageNum, W - M, H - 5, { align: 'right' });
+  }
+
+  function addPage() {
+    doc.addPage();
     pageNum++;
-    bg();
-    doc.setFillColor(...CARD); doc.rect(0, 0, W, 12, 'F');
-    doc.setFillColor(...GOLD); doc.rect(0, 12, W, 0.5, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...GOLD);
-    doc.text('StudyPathDE', 10, 8.5);
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUTED);
-    doc.text('Personalised for ' + profile.name + ' | ' + profile.country, W / 2, 8.5, { align: 'center' });
-    doc.text('Page ' + pageNum, W - 10, 8.5, { align: 'right' });
-    return 22;
+    fillBg();
+    drawFooter();
+    return 18;
   }
 
-  function newPage() { doc.addPage(); return addPageHeader(); }
-
-  function sectionHeader(title, y) {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...GOLD);
-    doc.text(title, 10, y);
-    doc.setFillColor(...GOLD); doc.rect(10, y + 2.5, W - 20, 0.5, 'F');
-    return y + 10;
+  // Check y and break page if needed; returns (possibly new) y
+  function cy(y, needed) {
+    if (y + (needed || 0) > SAFE) { return addPage(); }
+    return y;
   }
 
-  function accentCard(x, y, w, h, accent) {
-    doc.setFillColor(...CARD); doc.roundedRect(x, y, w, h, 2, 2, 'F');
-    doc.setFillColor(...accent); doc.rect(x, y, 3, h, 'F');
+  function secHeader(num, title, y) {
+    y = cy(y, 16);
+    doc.setFillColor(...CARD);
+    doc.rect(M, y, CW, 12, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(M, y, 3, 12, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...GOLD);
+    doc.text(num, M + 7, y + 8.5);
+    doc.setFontSize(10.5);
+    doc.setTextColor(...WHITE);
+    doc.text(title, M + 17, y + 8.5);
+    doc.setFillColor(...GOLD);
+    doc.rect(M, y + 12, CW, 0.4, 'F');
+    return y + 19;
   }
 
-  function solidCard(x, y, w, h, borderCol) {
-    doc.setFillColor(...CARD); doc.roundedRect(x, y, w, h, 2, 2, 'F');
-    if (borderCol) {
-      doc.setDrawColor(...borderCol); doc.setLineWidth(0.4);
-      doc.roundedRect(x, y, w, h, 2, 2, 'S');
-    }
-  }
-
-  function wrapText(text, x, y, maxW, size, color, bold) {
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
-    doc.setFontSize(size); doc.setTextColor(...color);
-    const lines = doc.splitTextToSize(String(text), maxW);
+  function bodyText(text, x, y, maxW, size, color, style) {
+    doc.setFont('helvetica', style || 'normal');
+    doc.setFontSize(size);
+    doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(String(text || ''), maxW);
+    y = cy(y, lines.length * (size * 0.42 + 0.8));
     doc.text(lines, x, y);
-    return y + lines.length * (size * 0.42 + 0.5);
+    return y + lines.length * (size * 0.42 + 0.8) + 1;
   }
 
   // ================================================================
-  // PAGE 1 - COVER
+  // PAGE 1 — COVER
   // ================================================================
-  pageNum++;
-  bg();
-  // Gold accent top bar
-  doc.setFillColor(...GOLD); doc.rect(0, 0, W, 4, 'F');
-  // Left accent strip
-  doc.setFillColor(...CARD); doc.rect(0, 4, 4, H - 4, 'F');
+  pageNum = 1;
+  fillBg();
 
-  // Brand header
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(...GOLD);
-  doc.text('StudyPathDE', 18, 26);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MUTED);
-  doc.text('AI-Powered German University Matching', 18, 34);
-  doc.setFillColor(...GOLD); doc.rect(18, 38, W - 28, 0.4, 'F');
+  // Gold top bar
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 0, W, 3, 'F');
 
-  // Guide for label
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text('PERSONALISED GUIDE FOR', 18, 54);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(28); doc.setTextColor(...WHITE);
-  doc.text(profile.name, 18, 68);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(12); doc.setTextColor(...GOLD);
-  doc.text(profile.field + '  |  ' + degreeLabel, 18, 78);
+  // Left strip
+  doc.setFillColor(...CARD);
+  doc.rect(0, 3, 3, H - 3, 'F');
 
-  // Info cards
-  const cards = [
-    { label:'COUNTRY', val: profile.country },
-    { label:'GRADE',   val: formatGrade(profile.grade).split(' (')[0] },
-    { label:'GERMAN',  val: (profile.german || 'None').toUpperCase() },
-    { label:'ENGLISH', val: formatEnglishShort(profile.english) },
-    { label:'DEGREE',  val: degreeLabel.split("'")[0] + 's' },
+  // Brand
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(...GOLD);
+  doc.text('StudyPathDE', M + 3, 32);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(...WHITE);
+  doc.text('AI-Powered German University Matching', M + 3, 43);
+
+  doc.setFillColor(...GOLD);
+  doc.rect(M + 3, 47, CW - 3, 0.4, 'F');
+
+  // Guide label
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('PERSONALISED GUIDE FOR', M + 3, 58);
+
+  // Student name
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...GOLD);
+  doc.text(profile.name || 'Student', M + 3, 69);
+
+  // Field + degree
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...WHITE);
+  doc.text((profile.field || '') + '  |  ' + degreeLabel, M + 3, 77);
+
+  // Profile badges
+  const badges = [
+    { label: 'COUNTRY', val: profile.country || 'N/A' },
+    { label: 'GRADE',   val: formatGrade(profile.grade).split(' (')[0] },
+    { label: 'GERMAN',  val: (profile.german || 'None').toUpperCase() },
+    { label: 'ENGLISH', val: formatEnglishShort(profile.english) },
+    { label: 'DEGREE',  val: degreeLabel.split("'")[0].trim() },
+    { label: 'FIELD',   val: (profile.field || '').slice(0, 12) },
   ];
-  cards.forEach((c, i) => {
-    const cx = 18 + i * 37;
-    solidCard(cx, 88, 33, 20, GOLD);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(5.5); doc.setTextColor(...MUTED);
-    doc.text(c.label, cx + 3, 94);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...WHITE);
-    const v = c.val.length > 14 ? c.val.slice(0, 12) + '..' : c.val;
-    doc.text(v, cx + 3, 102);
+  const bW = (CW - 3) / badges.length;
+  badges.forEach(function(b, i) {
+    var bx = M + 3 + i * bW;
+    doc.setFillColor(...CARD);
+    doc.roundedRect(bx, 83, bW - 2, 18, 1.5, 1.5, 'F');
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(bx, 83, bW - 2, 18, 1.5, 1.5, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.5);
+    doc.setTextColor(...MUTED);
+    doc.text(b.label, bx + 3, 89);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...WHITE);
+    var val = String(b.val);
+    doc.text(val.length > 13 ? val.slice(0, 11) + '..' : val, bx + 3, 97);
   });
 
-  // Date
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...DIM);
-  doc.text('Generated: ' + new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }), 18, 120);
+  // Gold divider
+  doc.setFillColor(...GOLD);
+  doc.rect(M + 3, 105, CW - 3, 0.4, 'F');
 
-  // Table of contents
-  solidCard(18, 128, W - 36, 78, GOLD);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GOLD);
-  doc.text('CONTENTS', 26, 137);
-  const toc = [
-    ['01', 'Eligibility Summary',              'Page 2'],
-    ['02', 'Your Matched Universities (Top 5)','Page 3'],
-    ['03', 'Step-by-Step Application Guide',   'Page 4'],
-    ['04', 'Blocked Account Guide - EUR 13,092','Page 5'],
-    ['05', 'Visa Application Guide',            'Page 6'],
-    ['06', 'Living in Germany - 2025 Costs',    'Page 7'],
-    ['07', 'Your Personal Checklist (12 items)','Page 8'],
-    ['08', 'Next Steps & Admission Service',    'Page 9'],
+  // Table of contents box
+  doc.setFillColor(...CARD);
+  doc.roundedRect(M + 3, 109, CW - 3, 88, 2, 2, 'F');
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(M + 3, 109, CW - 3, 88, 2, 2, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...GOLD);
+  doc.text('TABLE OF CONTENTS', M + 9, 118);
+  doc.setFillColor(...GOLD);
+  doc.rect(M + 9, 120, CW - 15, 0.3, 'F');
+
+  var toc = [
+    ['01', 'Eligibility Summary',                   '2'],
+    ['02', 'Your Matched Universities (Top 5)',      '3'],
+    ['03', 'Step-by-Step Application Guide',         '4'],
+    ['04', 'Blocked Account Guide  \u2014  EUR 13,092', '5'],
+    ['05', 'Visa Application Guide',                 '6'],
+    ['06', 'Living in Germany  \u2014  2025 Cost Guide', '7'],
+    ['07', 'Your Personal Checklist',                '8'],
+    ['08', 'Next Steps & Admission Service',         '9'],
   ];
-  toc.forEach(([n, t, p], i) => {
-    const ty = 145 + i * 8;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...GOLD); doc.text(n, 26, ty);
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(...WHITE); doc.text(t, 36, ty);
-    doc.setTextColor(...MUTED); doc.text(p, W - 26, ty, { align:'right' });
-    if (i < toc.length - 1) { doc.setDrawColor(...DIM); doc.setLineWidth(0.1); doc.line(26, ty + 2, W - 26, ty + 2); }
+  toc.forEach(function(row, i) {
+    var ty = 127 + i * 9;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GOLD);
+    doc.text(row[0], M + 9, ty);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...WHITE);
+    doc.text(row[1], M + 19, ty);
+    doc.setTextColor(...MUTED);
+    doc.text('p.' + row[2], W - M - 7, ty, { align: 'right' });
+    if (i < toc.length - 1) {
+      doc.setDrawColor(...DIM);
+      doc.setLineWidth(0.15);
+      doc.line(M + 9, ty + 2.5, W - M - 7, ty + 2.5);
+    }
   });
+
+  // Generated date
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...DIM);
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), M + 3, 205);
 
   // Disclaimer
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(7); doc.setTextColor(...DIM);
-  doc.text('This guide is personalised based on your submitted profile. Information is accurate as of the generation date.', W / 2, H - 16, { align:'center' });
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(7);
+  doc.setTextColor(...DIM);
+  doc.text('This guide is personalised based on your submitted profile. Information accurate as of the generation date.', W / 2, H - 16, { align: 'center' });
 
-  // Cover page footer
-  doc.setFillColor(...CARD); doc.rect(0, H - 11, W, 11, 'F');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-  doc.text('StudyPathDE  |  studypathde.com', 10, H - 4.5);
-  doc.text('Page 1', W - 10, H - 4.5, { align:'right' });
+  // Cover footer
+  doc.setFillColor(...GOLD);
+  doc.rect(M, H - 13, CW, 0.4, 'F');
+  doc.setFillColor(...CARD);
+  doc.rect(0, H - 12, W, 12, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...MUTED);
+  doc.text('StudyPathDE  |  studypathde.com', M, H - 5);
   doc.setTextColor(...GOLD);
-  doc.text('Personalised for ' + profile.name + '  |  ' + profile.country, W / 2, H - 4.5, { align:'center' });
+  doc.text('Personalised for ' + profile.name + '  |  Page 1', W - M, H - 5, { align: 'right' });
 
   // ================================================================
-  // PAGE 2 - ELIGIBILITY SUMMARY
+  // PAGE 2 — ELIGIBILITY SUMMARY
   // ================================================================
-  let y = newPage();
-  y = sectionHeader('Section 1: Eligibility Summary', y);
+  var y = addPage();
+  y = secHeader('01', 'Eligibility Summary', y);
 
-  // Anabin card
-  accentCard(10, y, W - 20, 32, GREEN);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GREEN);
-  doc.text('ANABIN RECOGNITION STATUS', 17, y + 7);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...WHITE);
-  doc.text(cd.anabinStatus, 17, y + 16);
-  const anLines = doc.splitTextToSize(cd.anabinNote, W - 36);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  doc.text(anLines.slice(0, 2), 17, y + 23);
-  y += 38;
+  // Eligible verdict banner
+  var eligible = ['excellent', 'very_good', 'good'].includes(profile.grade);
+  y = cy(y, 16);
+  if (eligible) { doc.setFillColor(20, 42, 28); } else { doc.setFillColor(42, 24, 20); }
+  doc.roundedRect(M, y, CW, 14, 2, 2, 'F');
+  doc.setDrawColor(eligible ? 46 : 200, eligible ? 125 : 80, eligible ? 82 : 40);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(M, y, CW, 14, 2, 2, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  if (eligible) { doc.setTextColor(...GREEN); } else { doc.setTextColor(200, 120, 50); }
+  doc.text(eligible ? 'YOU ARE ELIGIBLE TO APPLY TO GERMAN UNIVERSITIES' : 'ADDITIONAL PREPARATION MAY BE REQUIRED', W / 2, y + 6.5, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text(
+    eligible ? 'Your academic profile meets core entry requirements at multiple German institutions.'
+             : 'Consider a Studienkolleg (preparatory college) if direct admission is not possible.',
+    W / 2, y + 12, { align: 'center' }
+  );
+  y += 20;
 
-  // Grade conversion card
-  accentCard(10, y, W - 20, 40, GOLD);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GOLD);
-  doc.text('GRADE CONVERSION TO GERMAN SCALE  (1.0 = best  |  4.0 = minimum pass)', 17, y + 7);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...WHITE);
-  doc.text(gc.german, 17, y + 20);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  doc.text('German GPA equivalent', 52, y + 20);
-  const gcLines = doc.splitTextToSize(gc.explanation, W - 36);
-  doc.text(gcLines.slice(0, 2), 17, y + 28);
-  y += 47;
+  // 3 info cards — Anabin | Grade | English
+  y = cy(y, 32);
+  var c3W = (CW - 6) / 3;
+  var infoCards = [
+    { lbl: 'ANABIN STATUS',  val: cd.anabinStatus || 'H+',      sub: (cd.anabinNote || '').slice(0, 60) },
+    { lbl: 'GRADE (GERMAN)', val: gc.german || 'N/A',            sub: (gc.explanation || '').slice(0, 60) },
+    { lbl: 'ENGLISH LEVEL',  val: formatEnglishShort(profile.english), sub: (getEnglishNote(profile.english) || '').slice(0, 60) },
+  ];
+  infoCards.forEach(function(ic, i) {
+    var cx = M + i * (c3W + 3);
+    doc.setFillColor(...CARD);
+    doc.roundedRect(cx, y, c3W, 30, 2, 2, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(cx, y, c3W, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MUTED);
+    doc.text(ic.lbl, cx + 4, y + 9);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...GOLD);
+    doc.text(String(ic.val), cx + 4, y + 18);
+    var subL = doc.splitTextToSize(ic.sub, c3W - 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MUTED);
+    doc.text(subL.slice(0, 2), cx + 4, y + 24);
+  });
+  y += 36;
 
   // Language cards
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Language Assessment', 10, y); y += 6;
-  const langCards = [
-    { title:'GERMAN LEVEL', val:(profile.german||'None').toUpperCase(), note:getGermanNote(profile.german) },
-    { title:'ENGLISH LEVEL', val:formatEnglishShort(profile.english),   note:getEnglishNote(profile.english) },
+  y = cy(y, 36);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...WHITE);
+  doc.text('Language Assessment', M, y);
+  y += 7;
+  var lW = (CW - 4) / 2;
+  var langCards = [
+    { title: 'GERMAN LEVEL',  val: (profile.german || 'None').toUpperCase(), note: getGermanNote(profile.german) },
+    { title: 'ENGLISH LEVEL', val: formatEnglishShort(profile.english),      note: getEnglishNote(profile.english) },
   ];
-  langCards.forEach((lc, i) => {
-    const lx = 10 + i * 98;
-    solidCard(lx, y, 90, 28, null);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-    doc.text(lc.title, lx + 5, y + 7);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...GOLD);
-    doc.text(lc.val, lx + 5, y + 16);
-    const nLines = doc.splitTextToSize(lc.note, 80);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-    doc.text(nLines.slice(0, 2), lx + 5, y + 22);
+  langCards.forEach(function(lc, i) {
+    var lx = M + i * (lW + 4);
+    doc.setFillColor(...CARD);
+    doc.roundedRect(lx, y, lW, 26, 2, 2, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(lx, y, 3, 26, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...MUTED);
+    doc.text(lc.title, lx + 6, y + 7);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(...GOLD);
+    doc.text(String(lc.val), lx + 6, y + 16);
+    var nL = doc.splitTextToSize(lc.note || '', lW - 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.text(nL.slice(0, 2), lx + 6, y + 22);
   });
-  y += 36;
-
-  // Eligibility verdict
-  const eligible = ['excellent','very_good','good'].includes(profile.grade);
-  doc.setFillColor(eligible ? 10 : 20, eligible ? 26 : 18, eligible ? 18 : 10);
-  doc.roundedRect(10, y, W - 20, 20, 2, 2, 'F');
-  doc.setDrawColor(...(eligible ? GREEN : [251,191,36])); doc.setLineWidth(0.4);
-  doc.roundedRect(10, y, W - 20, 20, 2, 2, 'S');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
-  doc.setTextColor(...(eligible ? GREEN : [251,191,36]));
-  doc.text(eligible ? '[OK]  You are eligible to apply to German universities' : '[!]   Additional preparation may be recommended', 17, y + 8);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  doc.text(eligible ? 'Your academic profile meets core entry requirements at multiple German institutions.' : 'Consider a Studienkolleg (preparatory college) if direct admission is not possible.', 17, y + 15);
+  y += 32;
 
   // ================================================================
-  // PAGE 3 - MATCHED UNIVERSITIES
+  // PAGE 3 — MATCHED UNIVERSITIES
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 2: Your Matched Universities', y);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text('Based on: ' + profile.country + ' | ' + formatGrade(profile.grade).split(' (')[0] + ' | ' + profile.field + ' | ' + degreeLabel, 10, y);
-  y += 8;
+  y = addPage();
+  y = secHeader('02', 'Your Matched Universities (Top 5)', y);
 
-  top5.forEach((uni, i) => {
-    if (y > 244) { y = newPage(); }
-    const programs = getRelevantPrograms(uni, profile);
-    const progText = programs.join('  /  ');
-    const progLines = doc.splitTextToSize(progText, W - 52);
-    const cH = 44 + Math.max(0, progLines.length - 1) * 4;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('Matched for: ' + profile.country + '  |  ' + formatGrade(profile.grade).split(' (')[0] + '  |  ' + profile.field + '  |  ' + degreeLabel, M, y);
+  y += 9;
 
-    solidCard(10, y, W - 20, cH, null);
+  top5.forEach(function(uni, i) {
+    var programs  = getRelevantPrograms(uni, profile);
+    var progText  = programs.slice(0, 3).join('  /  ');
+    var progLines = doc.splitTextToSize(progText, CW - 42);
+    var whyLines  = doc.splitTextToSize(getWhySuited(uni, profile), CW - 42);
+    var blockH    = 14 + 6 + whyLines.length * 4.5 + 5 + progLines.length * 4.5 + 9;
+    y = cy(y, blockH + 5);
 
-    // Score bar at bottom
-    doc.setFillColor(...CARD2); doc.rect(10, y + cH - 2, W - 20, 2, 'F');
-    doc.setFillColor(...GOLD);  doc.rect(10, y + cH - 2, (W - 20) * uni.score / 100, 2, 'F');
+    if (i % 2 === 0) { doc.setFillColor(...CARD); } else { doc.setFillColor(...CARD2); }
+    doc.roundedRect(M, y, CW, blockH, 2, 2, 'F');
 
-    // Rank badge
-    doc.setFillColor(...GOLD); doc.circle(21, y + 16, 6, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...BG);
-    doc.text(String(i + 1), 21, y + 18.5, { align:'center' });
+    // Score bar
+    doc.setFillColor(...DIM);
+    doc.rect(M, y + blockH - 2, CW, 2, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(M, y + blockH - 2, CW * (uni.score || 0) / 100, 2, 'F');
+
+    // Rank circle
+    doc.setFillColor(...GOLD);
+    doc.circle(M + 8, y + 9, 5.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...BG);
+    doc.text(String(i + 1), M + 8, y + 11.5, { align: 'center' });
 
     // Name
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...WHITE);
-    doc.text(uni.name, 31, y + 9);
-
-    // City + match score
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-    doc.text('Location: ' + uni.city, 31, y + 16);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...WHITE);
+    doc.text(uni.name || '', M + 18, y + 8);
 
     // Score badge
-    doc.setFillColor(...GOLD); doc.roundedRect(W - 44, y + 3, 30, 11, 1.5, 1.5, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...BG);
-    doc.text('Score: ' + uni.score + '%', W - 29, y + 10.5, { align:'center' });
+    doc.setFillColor(...GOLD);
+    doc.roundedRect(W - M - 34, y + 2, 32, 9, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...BG);
+    doc.text('Match: ' + (uni.score || 0) + '%', W - M - 18, y + 7.5, { align: 'center' });
 
-    // Why suited
-    doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
-    const whyLines = doc.splitTextToSize(getWhySuited(uni, profile), W - 52);
-    doc.text(whyLines.slice(0, 1), 31, y + 23);
+    // City
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...MUTED);
+    doc.text('Location: ' + (uni.city || ''), M + 18, y + 15);
+
+    var uy = y + 21;
+
+    // Why
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...MUTED);
+    doc.text(whyLines, M + 18, uy);
+    uy += whyLines.length * 4.5 + 3;
 
     // Programs
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GOLD);
-    doc.text('Programs: ', 31, y + 30);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...GOLD);
+    doc.text('Programs: ', M + 18, uy);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    doc.text(progLines, M + 40, uy);
+    uy += progLines.length * 4.5 + 3;
+
+    // Details
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
     doc.setTextColor(...DIM);
-    doc.text(progLines, 50, y + 30);
+    doc.text('Min grade: ' + (uni.minGrade || 'N/A') + '   |   Tuition: ' + (uni.tuition || 'N/A') + '   |   Intake: ' + (uni.intake || 'N/A'), M + 18, uy);
 
-    // Min grade, tuition, intake
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...DIM);
-    const details = 'Min grade: ' + uni.minGrade + '   |   Tuition: ' + uni.tuition + '   |   Intake: ' + uni.intake;
-    const detLines = doc.splitTextToSize(details, W - 36);
-    doc.text(detLines.slice(0, 1), 31, y + cH - 7);
-
-    // Apply URL
-    doc.setFont('helvetica', 'bold'); doc.setTextColor(...GOLD);
-    doc.text('Apply: ' + uni.applyUrl, 31, y + cH - 3);
-
-    y += cH + 4;
+    y += blockH + 5;
   });
 
   // ================================================================
-  // PAGE 4 - APPLICATION GUIDE
+  // PAGE 4 — APPLICATION GUIDE
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 3: Step-by-Step Application Guide', y);
+  y = addPage();
+  y = secHeader('03', 'Step-by-Step Application Guide', y);
 
-  const appSteps = [
-    { n:'01', title:'Prepare Your Documents', body:'For ' + profile.degree + ' applicants from ' + profile.country + ': ' + (profile.degree === 'bachelor' ? 'School Leaving Certificate, transcript, language certificate.' : profile.degree === 'master' ? 'Bachelor degree certificate, full transcript, language certificate, CV.' : 'Master degree certificate, transcript, research proposal (expose), academic CV, 2 recommendation letters.') + ' All documents must be certified. ' + cd.documentsNote },
-    { n:'02', title:'Register on uni-assist.de', body:'uni-assist is the central application portal used by 190+ German universities for international applicants. Create a free account at uni-assist.de. Upload your certified documents. Processing fee: EUR 75 for the first university, EUR 30 for each additional. uni-assist verifies documents against the Anabin database.' },
-    { n:'03', title:'Check Direct Applications', body:'Not all universities use uni-assist. TU Munich, LMU Munich, RWTH Aachen, and some others have their own portals. Always check the university International Admissions page directly to confirm the correct application channel before paying any fees.' },
-    { n:'04', title:'Application Deadlines', body:'Winter Semester (starts October): Deadline 15 July. Summer Semester (starts April): Deadline 15 January. These are typical dates - some programs have earlier internal deadlines. Always verify directly with the university website. PhD applications may be accepted year-round.' },
-    { n:'05', title:'After Application - What to Expect', body:'Processing takes 4-8 weeks. If accepted, you receive a Zulassungsbescheid (admission letter). Enrol (immatrikulieren) before the stated deadline. Pay the semester fee (typically EUR 130-310, includes public transport pass in most cities).' },
+  var appSteps = [
+    { n: '01', title: 'Prepare Your Documents',
+      body: 'For ' + profile.degree + ' applicants from ' + profile.country + ': ' +
+        (profile.degree === 'bachelor' ? 'School Leaving Certificate, transcript, language certificate.'
+          : profile.degree === 'master' ? 'Bachelor degree certificate, full transcript, language certificate, CV.'
+          : 'Master degree certificate, transcript, research proposal, academic CV, 2 recommendation letters.') +
+        ' All documents must be certified. ' + (cd.documentsNote || '') },
+    { n: '02', title: 'Register on uni-assist.de',
+      body: 'uni-assist is the central application portal used by 190+ German universities. Create a free account at uni-assist.de. Upload certified documents. Processing fee: EUR 75 for the first university, EUR 30 for each additional.' },
+    { n: '03', title: 'Check Direct Applications',
+      body: 'Not all universities use uni-assist. TU Munich, LMU Munich, RWTH Aachen and others have their own portals. Always check the university International Admissions page before paying any fees.' },
+    { n: '04', title: 'Application Deadlines',
+      body: 'Winter Semester (October start): Deadline 15 July. Summer Semester (April start): Deadline 15 January. Some programs have earlier internal deadlines. PhD applications may be accepted year-round.' },
+    { n: '05', title: 'After Application \u2014 What to Expect',
+      body: 'Processing takes 4\u20138 weeks. If accepted, you receive a Zulassungsbescheid (admission letter). Enrol before the stated deadline. Pay the semester fee (EUR 130\u2013310, includes transport pass in most cities).' },
   ];
-  appSteps.forEach((step) => {
-    if (y > 256) { y = newPage(); }
-    doc.setFillColor(...GOLD); doc.roundedRect(10, y, 13, 8, 1, 1, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...BG);
-    doc.text(step.n, 16.5, y + 5.5, { align:'center' });
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text(step.title, 27, y + 5.5);
-    y += 10;
-    const bLines = doc.splitTextToSize(step.body, W - 22);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-    doc.text(bLines, 14, y);
-    y += bLines.length * 4.3 + 6;
+
+  appSteps.forEach(function(step) {
+    var bLines = doc.splitTextToSize(step.body, CW - 16);
+    var blockH = 11 + bLines.length * 4.5 + 6;
+    y = cy(y, blockH);
+    doc.setFillColor(...GOLD);
+    doc.roundedRect(M, y, 12, 8, 1, 1, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...BG);
+    doc.text(step.n, M + 6, y + 5.5, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...WHITE);
+    doc.text(step.title, M + 16, y + 5.5);
+    y += 11;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    doc.text(bLines, M + 4, y);
+    y += bLines.length * 4.5 + 7;
   });
 
   // ================================================================
-  // PAGE 5 - BLOCKED ACCOUNT
+  // PAGE 5 — BLOCKED ACCOUNT
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 4: Blocked Account Guide', y);
+  y = addPage();
+  y = secHeader('04', 'Blocked Account Guide', y);
 
-  // Amount hero card
-  solidCard(10, y, W - 20, 30, GOLD);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(30); doc.setTextColor(...GOLD);
-  doc.text('EUR 13,092', W / 2, y + 14, { align:'center' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  doc.text('Required for one year  |  EUR 1,091 released to you monthly after arrival  (updated 2025)', W / 2, y + 22, { align:'center' });
-  y += 36;
+  // Hero amount
+  y = cy(y, 32);
+  doc.setFillColor(...CARD);
+  doc.roundedRect(M, y, CW, 28, 2, 2, 'F');
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(M, y, CW, 28, 2, 2, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(28);
+  doc.setTextColor(...GOLD);
+  doc.text('EUR 13,092', W / 2, y + 16, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('Required for one year  |  EUR 1,091 released monthly after arrival  (updated 2025)', W / 2, y + 24, { align: 'center' });
+  y += 34;
 
   // What is it
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('What is a Blocked Account?', 10, y); y += 5;
-  const baText = 'A Sperrkonto (blocked account) is a special German bank account required for your student visa. You deposit EUR 13,092 which is frozen until you arrive in Germany, then released to you as EUR 1,091 per month. This proves to the German embassy that you can financially support yourself for one full year of study.';
-  const baLines = doc.splitTextToSize(baText, W - 20);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text(baLines, 10, y); y += baLines.length * 4.3 + 8;
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('What is a Blocked Account?', M, y);
+  y += 6;
+  var baText = 'A Sperrkonto (blocked account) is a special German bank account required for your student visa. You deposit EUR 13,092 which is frozen until you arrive in Germany, then released as EUR 1,091/month. This proves to the German embassy you can financially support yourself for one year of study.';
+  var baLines = doc.splitTextToSize(baText, CW);
+  y = cy(y, baLines.length * 4.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text(baLines, M, y);
+  y += baLines.length * 4.5 + 8;
 
-  // Provider comparison table
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Provider Comparison', 10, y); y += 6;
+  // Provider table
+  y = cy(y, 50);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Provider Comparison', M, y);
+  y += 7;
 
-  // Table header
-  doc.setFillColor(...CARD); doc.rect(10, y, W - 20, 9, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-  [['PROVIDER', 14], ['SETUP FEE', 58], ['MONTHLY FEE', 100], ['PROCESSING', 136], ['RATING', W - 28]].forEach(([h, x]) => {
-    doc.text(h, x, y + 6.5, h === 'RATING' ? { align:'right' } : undefined);
+  var pCols  = ['PROVIDER', 'SETUP FEE', 'MONTHLY', 'PROCESSING', 'RATING'];
+  var pColsX = [M + 4, M + 42, M + 82, M + 116, W - M - 4];
+  doc.setFillColor(...CARD);
+  doc.rect(M, y, CW, 9, 'F');
+  pCols.forEach(function(h, i) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.text(h, pColsX[i], y + 6.5, i === 4 ? { align: 'right' } : undefined);
   });
   y += 9;
 
-  const providers = [
-    { name:'Fintiba',  fee:'EUR 89',  monthly:'EUR 4.90', time:'2-5 days',  rec:true  },
-    { name:'Expatrio', fee:'EUR 69',  monthly:'EUR 4.90', time:'1-3 days',  rec:false },
-    { name:'Coracle',  fee:'EUR 99',  monthly:'EUR 4.90', time:'3-7 days',  rec:false },
+  var providers = [
+    { name: 'Fintiba',  fee: 'EUR 89', monthly: 'EUR 4.90', time: '2\u20135 days', rec: true  },
+    { name: 'Expatrio', fee: 'EUR 69', monthly: 'EUR 4.90', time: '1\u20133 days', rec: false },
+    { name: 'Coracle',  fee: 'EUR 99', monthly: 'EUR 4.90', time: '3\u20137 days', rec: false },
   ];
-  providers.forEach((p) => {
-    if (p.rec) { doc.setFillColor(16, 24, 36); } else { doc.setFillColor(...CARD2); }
-    doc.rect(10, y, W - 20, 10, 'F');
-    if (p.rec) { doc.setDrawColor(...GOLD); doc.setLineWidth(0.3); doc.rect(10, y, W - 20, 10, 'S'); }
-    doc.setFont('helvetica', p.rec ? 'bold' : 'normal'); doc.setFontSize(8.5);
-    doc.setTextColor(...(p.rec ? GOLD : WHITE)); doc.text(p.name, 14, y + 7);
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUTED);
-    doc.text(p.fee, 58, y + 7);
-    doc.text(p.monthly, 100, y + 7);
-    doc.text(p.time, 136, y + 7);
+  providers.forEach(function(p) {
+    if (p.rec) { doc.setFillColor(20, 32, 22); } else { doc.setFillColor(...CARD2); }
+    doc.rect(M, y, CW, 10, 'F');
     if (p.rec) {
-      doc.setFont('helvetica', 'bold'); doc.setTextColor(...GREEN);
-      doc.text('RECOMMENDED', W - 14, y + 7, { align:'right' });
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.3);
+      doc.rect(M, y, CW, 10, 'S');
+    }
+    doc.setFont('helvetica', p.rec ? 'bold' : 'normal');
+    doc.setFontSize(8.5);
+    if (p.rec) { doc.setTextColor(...GOLD); } else { doc.setTextColor(...WHITE); }
+    doc.text(p.name, pColsX[0], y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    doc.text(p.fee,     pColsX[1], y + 7);
+    doc.text(p.monthly, pColsX[2], y + 7);
+    doc.text(p.time,    pColsX[3], y + 7);
+    if (p.rec) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...GREEN);
+      doc.text('RECOMMENDED', pColsX[4], y + 7, { align: 'right' });
     }
     y += 10;
   });
-  y += 6;
+  y += 7;
 
-  // Steps
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('How to Open Your Blocked Account (Fintiba)', 10, y); y += 6;
-  const bSteps = [
-    'Visit fintiba.com and click "Open Blocked Account".',
-    'Complete identity verification (KYC) with your passport - takes approximately 5 minutes.',
-    'Receive your IBAN and account details by email within 2-5 business days.',
-    'Transfer EUR 13,092 from your home bank account to the Fintiba IBAN provided.',
-    'Fintiba sends you a confirmation certificate once funds are received and verified.',
-    'Include this confirmation certificate in your student visa application documents.',
-    'After arriving in Germany and visa activation: EUR 1,091 is released to you each month.',
+  // Steps to open
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('How to Open Your Blocked Account (Fintiba)', M, y);
+  y += 7;
+
+  var bSteps = [
+    'Visit fintiba.com and click \u201cOpen Blocked Account\u201d.',
+    'Complete identity verification (KYC) with your passport \u2014 takes approximately 5 minutes.',
+    'Receive your IBAN and account details by email within 2\u20135 business days.',
+    'Transfer EUR 13,092 from your home bank to the Fintiba IBAN provided.',
+    'Fintiba sends a confirmation certificate once funds are received and verified.',
+    'Include this certificate in your student visa application documents.',
+    'After arriving in Germany: EUR 1,091 is released to you each month.',
   ];
-  bSteps.forEach((s, i) => {
-    if (y > 272) { y = newPage(); }
-    doc.setFillColor(...GOLD); doc.circle(15, y + 3, 3, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...BG);
-    doc.text(String(i + 1), 15, y + 5.2, { align:'center' });
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...WHITE);
-    doc.text(s, 21, y + 5);
-    y += 8;
+  bSteps.forEach(function(s, i) {
+    var sLines = doc.splitTextToSize(s, CW - 14);
+    var sH     = sLines.length * 4.5 + 4;
+    y = cy(y, sH + 2);
+    doc.setFillColor(...GOLD);
+    doc.circle(M + 5, y + 3.5, 3.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...BG);
+    doc.text(String(i + 1), M + 5, y + 5.5, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...WHITE);
+    doc.text(sLines, M + 12, y + 5);
+    y += sH + 3;
   });
 
   // ================================================================
-  // PAGE 6 - VISA GUIDE
+  // PAGE 6 — VISA GUIDE
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 5: Visa Application Guide', y);
+  y = addPage();
+  y = secHeader('05', 'Visa Application Guide', y);
 
   // Embassy card
-  accentCard(10, y, W - 20, 22, BLUE);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-  doc.text('German Embassy / Consulate for ' + profile.country, 17, y + 8);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  const emLines = doc.splitTextToSize(cd.visaEmbassy, W - 34);
-  doc.text(emLines.slice(0, 1), 17, y + 16);
-  y += 28;
+  y = cy(y, 24);
+  doc.setFillColor(...CARD);
+  doc.roundedRect(M, y, CW, 20, 2, 2, 'F');
+  doc.setFillColor(...GOLD);
+  doc.rect(M, y, 3, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...WHITE);
+  doc.text('German Embassy / Consulate for ' + profile.country, M + 7, y + 8);
+  var emLines = doc.splitTextToSize(cd.visaEmbassy || 'See official German embassy website for your country.', CW - 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text(emLines.slice(0, 1), M + 7, y + 16);
+  y += 26;
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...GOLD);
-  doc.text('Visa Type Required: National Visa (Type D) - Student Visa', 10, y); y += 6;
-  const visaIntro = 'You must apply for a National Visa (Nationales Visum), NOT a Schengen tourist visa. The National Visa Type D is specifically for long-term study in Germany. It allows you to stay and can be extended to a residence permit after arrival.';
-  const viLines = doc.splitTextToSize(visaIntro, W - 20);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text(viLines, 10, y); y += viLines.length * 4.3 + 8;
+  // Visa type
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...GOLD);
+  doc.text('Visa Type Required: National Visa (Type D) \u2014 Student Visa', M, y);
+  y += 7;
+  var viText = 'You must apply for a National Visa (Nationales Visum), NOT a Schengen tourist visa. The National Visa Type D is for long-term study in Germany and can be extended to a residence permit after arrival.';
+  var viLines = doc.splitTextToSize(viText, CW);
+  y = cy(y, viLines.length * 4.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text(viLines, M, y);
+  y += viLines.length * 4.5 + 8;
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Required Documents Checklist', 10, y); y += 6;
-  const visaDocs = [
+  // Checklist
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Required Documents Checklist', M, y);
+  y += 7;
+
+  var visaDocs = [
     'Valid passport (minimum 6 months validity beyond intended stay)',
     'University admission letter (Zulassungsbescheid)',
-    'Blocked account certificate - Fintiba or Expatrio (EUR 13,092)',
-    'Health insurance covering Germany (travel insurance until arrival is acceptable)',
-    'Biometric passport photos (35mm x 45mm)',
-    'Proof of accommodation in Germany (for at least first months)',
+    'Blocked account certificate \u2014 Fintiba or Expatrio (EUR 13,092)',
+    'Health insurance covering Germany',
+    'Biometric passport photos (35mm \u00d7 45mm)',
+    'Proof of accommodation in Germany (first months at minimum)',
     'Language certificate (German B2/C1 or English IELTS 6.5+ for English programs)',
     'Completed visa application form (download from embassy website)',
     'Visa application fee: EUR 75',
-    cd.additionalVisaDoc,
+    cd.additionalVisaDoc || 'Any additional country-specific documents per embassy instructions',
   ];
-  visaDocs.forEach((d) => {
-    if (y > 274) { y = newPage(); }
-    doc.setFillColor(...GOLD); doc.rect(10, y + 1.5, 2.5, 2.5, 'F');
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...WHITE);
-    doc.text(d, 16, y + 4);
-    y += 7.5;
+  visaDocs.forEach(function(d) {
+    var dLines = doc.splitTextToSize(d, CW - 10);
+    var dH     = dLines.length * 4.5 + 3;
+    y = cy(y, dH + 2);
+    doc.setFillColor(...GOLD);
+    doc.rect(M, y + 2, 2.5, 2.5, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...WHITE);
+    doc.text(dLines, M + 6, y + 4.5);
+    y += dH + 2;
   });
-  y += 4;
+  y += 5;
 
-  if (y > 258) { y = newPage(); }
-  accentCard(10, y, W - 20, 20, [251, 191, 36]);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(251, 191, 36);
-  doc.text('Expected Timeline for ' + profile.country + ': ' + cd.visaTimeline, 17, y + 8);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text('Book your visa appointment as early as possible - slots fill up 4-8 weeks in advance.', 17, y + 15);
+  // Timeline box
+  y = cy(y, 22);
+  doc.setFillColor(...CARD);
+  doc.roundedRect(M, y, CW, 18, 2, 2, 'F');
+  doc.setDrawColor(251, 191, 36);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, CW, 18, 2, 2, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(251, 191, 36);
+  doc.text('Expected Processing Time for ' + profile.country + ': ' + (cd.visaTimeline || '4\u20138 weeks'), M + 6, y + 8);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('Book your appointment as early as possible \u2014 slots fill up 4\u20138 weeks in advance.', M + 6, y + 15);
 
   // ================================================================
-  // PAGE 7 - LIVING IN GERMANY (2025)
+  // PAGE 7 — LIVING COSTS
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 6: Living in Germany - 2025 Cost Guide', y);
+  y = addPage();
+  y = secHeader('06', 'Living in Germany \u2014 2025 Cost Guide', y);
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Monthly Cost Estimates by City (EUR) - Updated 2025', 10, y); y += 6;
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Monthly Cost Estimates by City (EUR) \u2014 Updated 2025', M, y);
+  y += 8;
 
-  const cols    = ['City', 'Rent (EUR)', 'Food (EUR)', 'Transport', 'Misc (EUR)', 'TOTAL (EUR)'];
-  const costs2025 = [
-    ['Berlin',    '750-1,300', '270-380', '~29-57',  '150-200', '1,200-1,940'],
-    ['Munich',    '950-1,600', '300-400', '~29-57',  '160-260', '1,440-2,320'],
-    ['Hamburg',   '850-1,400', '270-370', '~29-57',  '150-210', '1,300-2,040'],
-    ['Frankfurt', '850-1,400', '280-380', '~29-87',  '150-210', '1,310-2,080'],
+  // City costs table
+  var cCols   = ['City', 'Rent (EUR)', 'Food (EUR)', 'Transport', 'Misc (EUR)', 'TOTAL (EUR)'];
+  var cColW   = CW / cCols.length;
+  var c2025   = [
+    ['Berlin',    '750\u20131,300', '270\u2013380', 'EUR 29\u201357', '150\u2013200', '1,200\u20131,940'],
+    ['Munich',    '950\u20131,600', '300\u2013400', 'EUR 29\u201357', '160\u2013260', '1,440\u20132,320'],
+    ['Hamburg',   '850\u20131,400', '270\u2013370', 'EUR 29\u201357', '150\u2013210', '1,300\u20132,040'],
+    ['Frankfurt', '850\u20131,400', '280\u2013380', 'EUR 29\u201387', '150\u2013210', '1,310\u20132,080'],
   ];
-  const cW = (W - 20) / cols.length;
 
-  doc.setFillColor(...CARD); doc.rect(10, y, W - 20, 9, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
-  cols.forEach((c, i) => doc.text(c, 12 + i * cW, y + 6.5));
+  y = cy(y, 50);
+  doc.setFillColor(...CARD);
+  doc.rect(M, y, CW, 9, 'F');
+  cCols.forEach(function(c, i) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.text(c, M + 2 + i * cColW, y + 6.5);
+  });
   y += 9;
 
-  costs2025.forEach((row, ri) => {
+  c2025.forEach(function(row, ri) {
     if (ri % 2 === 0) { doc.setFillColor(...CARD); } else { doc.setFillColor(...CARD2); }
-    doc.rect(10, y, W - 20, 10, 'F');
-    row.forEach((cell, i) => {
+    doc.rect(M, y, CW, 10, 'F');
+    row.forEach(function(cell, i) {
       doc.setFont('helvetica', i === 0 ? 'bold' : 'normal');
       doc.setFontSize(8.5);
-      doc.setTextColor(...(i === 0 ? GOLD : (i === 5 ? WHITE : MUTED)));
-      doc.text(cell, 12 + i * cW, y + 7);
+      if (i === 0) { doc.setTextColor(...GOLD); }
+      else if (i === 5) { doc.setTextColor(...WHITE); }
+      else { doc.setTextColor(...MUTED); }
+      doc.text(cell, M + 2 + i * cColW, y + 7);
     });
     y += 10;
   });
-  y += 6;
+  y += 5;
 
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(...DIM);
-  doc.text('Note: Transport costs are low due to student Deutschlandticket (EUR 29/month) available in most states from 2024-2025.', 10, y);
-  y += 10;
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...DIM);
+  doc.text('Note: Transport costs are low due to the student Deutschlandticket (EUR 29/month) available in most states.', M, y);
+  y += 9;
 
   // Accommodation tips
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Accommodation Tips', 10, y); y += 6;
-  const accTips = [
-    'Studierendenwerk dormitory - cheapest option (EUR 200-450/month). Apply immediately after getting admission letter.',
-    'WG - Wohngemeinschaft shared flat - most common for students (EUR 450-750/month including utilities).',
+  y = cy(y, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Accommodation Tips', M, y);
+  y += 7;
+
+  var accTips = [
+    'Studierendenwerk dormitory \u2014 cheapest option (EUR 200\u2013450/month). Apply immediately after receiving your admission letter.',
+    'WG (Wohngemeinschaft) shared flat \u2014 most common for students (EUR 450\u2013750/month including utilities).',
     'Find rooms on: WG-Gesucht.de, StudiBnB, Immoscout24.de, Wunderflats.com',
     'Always confirm if utilities (Nebenkosten) are included in rent before signing any contract.',
   ];
-  accTips.forEach((tip) => {
-    if (y > 266) { y = newPage(); }
-    const tl = doc.splitTextToSize('- ' + tip, W - 20);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-    doc.text(tl, 10, y); y += tl.length * 4.5 + 3;
+  accTips.forEach(function(tip) {
+    var tl = doc.splitTextToSize('\u2014 ' + tip, CW - 4);
+    y = cy(y, tl.length * 4.5 + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    doc.text(tl, M, y);
+    y += tl.length * 4.5 + 4;
   });
   y += 4;
 
   // Health insurance
-  if (y > 248) { y = newPage(); }
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...WHITE);
-  doc.text('Health Insurance - Mandatory for All Students', 10, y); y += 4;
-  accentCard(10, y, W - 20, 26, GREEN);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GREEN);
-  doc.text('Mandatory - must enrol before university registration', 17, y + 7);
-  const hiText = 'Public health insurance (gesetzliche Krankenversicherung): EUR 120-130/month for students under 30 (2025 rate). TK Techniker Krankenkasse is the most popular with international students. You must show proof of German health insurance before you can enrol at university.';
-  const hiLines = doc.splitTextToSize(hiText, W - 34);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  doc.text(hiLines, 17, y + 14);
+  y = cy(y, 34);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Health Insurance \u2014 Mandatory for All Students', M, y);
+  y += 6;
+  doc.setFillColor(20, 36, 26);
+  doc.roundedRect(M, y, CW, 24, 2, 2, 'F');
+  doc.setDrawColor(...GREEN);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, CW, 24, 2, 2, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GREEN);
+  doc.text('Mandatory \u2014 must enrol before university registration', M + 6, y + 8);
+  var hiText  = 'Public health insurance: EUR 120\u2013130/month for students under 30 (2025 rate). TK Techniker Krankenkasse is most popular with international students. You must show proof of German health insurance before enrolment at university.';
+  var hiLines = doc.splitTextToSize(hiText, CW - 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text(hiLines, M + 6, y + 15);
 
   // ================================================================
-  // PAGE 8 - PERSONAL CHECKLIST
+  // PAGE 8 — PERSONAL CHECKLIST
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 7: Your Personal Checklist', y);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text('Personalised for ' + profile.name + ' (' + profile.country + ') - ' + profile.field + ' - ' + degreeLabel, 10, y);
+  y = addPage();
+  y = secHeader('07', 'Your Personal Checklist', y);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text('Personalised for ' + profile.name + '  (' + profile.country + ')  \u2014  ' + profile.field + '  \u2014  ' + degreeLabel, M, y);
   y += 8;
 
-  check.forEach((item, i) => {
-    if (y > 264) { y = newPage(); }
-    const iLines = doc.splitTextToSize(item.text, W - 44);
-    const iH = Math.max(12, iLines.length * 4.5 + 6);
-    if (i % 2 === 0) { doc.setFillColor(...CARD); } else { doc.setFillColor(...CARD2); }
-    doc.roundedRect(10, y, W - 20, iH, 1.5, 1.5, 'F');
+  check.forEach(function(item, idx) {
+    var iLines = doc.splitTextToSize(item.text, CW - 42);
+    var iH     = Math.max(14, iLines.length * 4.5 + 8);
+    y = cy(y, iH + 3);
+
+    if (idx % 2 === 0) { doc.setFillColor(...CARD); } else { doc.setFillColor(...CARD2); }
+    doc.roundedRect(M, y, CW, iH, 1.5, 1.5, 'F');
+
     // Checkbox
-    doc.setDrawColor(...GOLD); doc.setLineWidth(0.4);
-    doc.roundedRect(15, y + iH / 2 - 3.5, 7, 7, 1, 1, 'S');
-    // Number
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...DIM);
-    doc.text(String(i + 1).padStart(2, '0'), 25, y + 5.5);
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(M + 4, y + iH / 2 - 4, 8, 8, 1, 1, 'S');
+
+    // Number badge
+    doc.setFillColor(...DIM);
+    doc.roundedRect(M + 15, y + iH / 2 - 4, 10, 8, 1, 1, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...GOLD);
+    doc.text(String(idx + 1).padStart(2, '0'), M + 20, y + iH / 2 + 1.5, { align: 'center' });
+
     // Category
-    const catCol = getCategoryColor(item.category, { muted: MUTED });
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6); doc.setTextColor(...catCol);
-    doc.text(item.category.toUpperCase(), 33, y + 5.5);
+    var catCol = getCategoryColor(item.category, { muted: MUTED });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6);
+    doc.setTextColor(...catCol);
+    doc.text((item.category || '').toUpperCase(), M + 28, y + iH / 2 - 1.5);
+
     // Text
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...WHITE);
-    doc.text(iLines, 25, y + 10);
-    y += iH + 2;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...WHITE);
+    doc.text(iLines, M + 28, y + iH / 2 + 3.5);
+
+    y += iH + 3;
   });
 
   // ================================================================
-  // PAGE 9 - NEXT STEPS & UPSELL
+  // PAGE 9 — NEXT STEPS
   // ================================================================
-  y = newPage();
-  y = sectionHeader('Section 8: Your Next Steps', y);
+  y = addPage();
+  y = secHeader('08', 'Next Steps & Admission Service', y);
 
-  const nextSteps = [
-    { n:'01', title:'Right Now - Today', body:'Review this guide carefully. Identify your top 3 universities from Section 2. Visit each university website and confirm the exact application requirements for your specific program and degree level.' },
-    { n:'02', title:'This Week', body:'Check the Anabin database (anabin.kmk.org) to confirm your specific institution is recognised. Start the document preparation process - certified translations take time to arrange.' },
-    { n:'03', title:'Within 2 Weeks', body:'Open your blocked account (Fintiba or Expatrio) and begin the transfer of EUR 13,092. Start the KYC verification process immediately as it can take a few days.' },
-    { n:'04', title:'Before Applying', body:'Book your visa appointment at the German embassy. Secure your language certificate if you do not already have one that meets requirements. Arrange accommodation search in Germany.' },
-    { n:'05', title:'Application Season', body:'Submit applications via uni-assist.de or direct university portals before the deadlines (15 July for winter semester, 15 January for summer semester). Apply to 3-5 universities to maximise chances.' },
+  var nextSteps = [
+    { n: '01', title: 'Right Now \u2014 Today',
+      body: 'Review this guide carefully. Identify your top 3 universities from Section 2. Visit each university website and confirm the exact application requirements for your program and degree level.' },
+    { n: '02', title: 'This Week',
+      body: 'Check the Anabin database (anabin.kmk.org) to confirm your institution is recognised. Start document preparation \u2014 certified translations take time to arrange.' },
+    { n: '03', title: 'Within 2 Weeks',
+      body: 'Open your blocked account (Fintiba or Expatrio) and begin the transfer of EUR 13,092. Start the KYC verification process immediately as it can take several days.' },
+    { n: '04', title: 'Before Applying',
+      body: 'Book your visa appointment at the German embassy. Secure your language certificate if needed. Begin your accommodation search in Germany.' },
+    { n: '05', title: 'Application Season',
+      body: 'Submit applications via uni-assist.de or direct university portals before deadlines (15 July for winter semester, 15 January for summer semester). Apply to 3\u20135 universities to maximise your chances.' },
   ];
 
-  nextSteps.forEach((step) => {
-    if (y > 250) { y = newPage(); }
-    doc.setFillColor(...GOLD); doc.roundedRect(10, y, 13, 8, 1, 1, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...BG);
-    doc.text(step.n, 16.5, y + 5.5, { align:'center' });
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text(step.title, 27, y + 5.5);
-    y += 10;
-    const bLines = doc.splitTextToSize(step.body, W - 22);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-    doc.text(bLines, 14, y); y += bLines.length * 4.3 + 6;
+  nextSteps.forEach(function(step) {
+    var bLines = doc.splitTextToSize(step.body, CW - 16);
+    var blockH = 11 + bLines.length * 4.5 + 6;
+    y = cy(y, blockH);
+    doc.setFillColor(...GOLD);
+    doc.roundedRect(M, y, 12, 8, 1, 1, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...BG);
+    doc.text(step.n, M + 6, y + 5.5, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...WHITE);
+    doc.text(step.title, M + 16, y + 5.5);
+    y += 11;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    doc.text(bLines, M + 4, y);
+    y += bLines.length * 4.5 + 7;
   });
 
-  // Upsell CTA
-  if (y > 240) { y = newPage(); }
-  y += 8;
-  doc.setFillColor(16, 22, 36); doc.roundedRect(10, y, W - 20, 36, 3, 3, 'F');
-  doc.setDrawColor(...GOLD); doc.setLineWidth(0.5); doc.roundedRect(10, y, W - 20, 36, 3, 3, 'S');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...GOLD);
-  doc.text('Want Expert Help With Your Application?', W / 2, y + 12, { align:'center' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...WHITE);
-  doc.text('Upgrade to StudyPathDE Admission Service (EUR 299)', W / 2, y + 20, { align:'center' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
-  const ctaText = 'Dedicated admission consultant | Full document review | Application submission | Motivation letter support | Interview coaching';
-  const ctaLines = doc.splitTextToSize(ctaText, W - 40);
-  doc.text(ctaLines, W / 2, y + 27, { align:'center' });
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...GOLD);
-  doc.text('Visit: studypathde.com', W / 2, y + 34, { align:'center' });
+  // CTA box
+  y = cy(y, 42);
+  y += 6;
+  doc.setFillColor(18, 18, 14);
+  doc.roundedRect(M, y, CW, 36, 3, 3, 'F');
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(M, y, CW, 36, 3, 3, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...GOLD);
+  doc.text('Upgrade to StudyPathDE Admission Service', W / 2, y + 11, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...WHITE);
+  doc.text('EUR 299', W / 2, y + 20, { align: 'center' });
+  var ctaLines = doc.splitTextToSize('Dedicated consultant  |  Document review  |  Application submission  |  Motivation letter  |  Interview coaching', CW - 20);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED);
+  doc.text(ctaLines, W / 2, y + 28, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GOLD);
+  doc.text('studypathde.com', W / 2, y + 34, { align: 'center' });
 
   doc.save('StudyPathDE_Guide_' + profile.name.replace(/\s+/g, '_') + '.pdf');
   showToast('Your personalised PDF guide is downloading!', 'success');
