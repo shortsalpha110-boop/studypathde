@@ -28,27 +28,32 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 async function submitLead(name, email) {
   const SUPABASE_URL = 'https://oohuqoznqpvrnfmauxtm.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxMDY2MDIsImV4cCI6MjA1OTY4MjYwMn0.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vaHVxb3pucXB2cm5mbWF1eHRtIiwicm9sZSI6ImFub24ifQ';
+  const url = `${SUPABASE_URL}/rest/v1/leads`;
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Prefer': 'return=minimal'
+  };
+  const body = JSON.stringify({ name: name, email: email });
+
+  console.log('submitLead called with:', name, email);
+  console.log('Fetch URL:', url);
+  console.log('Fetch headers:', JSON.stringify(headers));
+  console.log('Fetch body:', body);
 
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ name: name, email: email })
-    });
+    const response = await fetch(url, { method: 'POST', headers, body });
+    const responseText = await response.text();
 
     console.log('Supabase response status:', response.status);
+    console.log('Supabase response text:', responseText);
 
     if (response.ok || response.status === 201) {
       console.log('Lead saved successfully');
       return true;
     } else {
-      const errorText = await response.text();
-      console.error('Supabase error:', errorText);
+      console.error('Supabase error:', response.status, responseText);
       return false;
     }
   } catch (err) {
@@ -563,6 +568,7 @@ document.getElementById('btnGateSubmit').addEventListener('click', async () => {
   gateEmail = email;
   gateSubmitted = true;
 
+  alert('Submitting to Supabase...');
   submitLead(name, email);
   saveLead({ name, email, timestamp: new Date().toISOString() });
 
